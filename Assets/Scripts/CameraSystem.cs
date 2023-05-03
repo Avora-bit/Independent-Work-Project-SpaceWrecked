@@ -7,11 +7,11 @@ using UnityEngine;
 
 public class CameraSystem : BaseSingleton<CameraSystem>
 {
-    [SerializeField] private float moveSpeed, sprintMult;
-    [SerializeField] private int edgeScrollBuffer;
-    [SerializeField] private float minPosX, minPosY, maxPosX, maxPosY;
-    [SerializeField] private float zoomSpeed;
-    [SerializeField] private float minZoom, maxZoom;
+    [SerializeField] private float moveSpeed = 5, sprintMult = 5;
+    [SerializeField] private int edgeScrollBuffer = 10;
+    [SerializeField] private float minPosX = -100, minPosY = -100, maxPosX = 100, maxPosY = 100;
+    [SerializeField] private float zoomSpeed = 20;
+    [SerializeField] private float minZoom = 10, maxZoom = -30;
 
     public GameObject followCamTarget = null;
 

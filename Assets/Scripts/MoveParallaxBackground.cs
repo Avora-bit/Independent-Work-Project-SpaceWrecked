@@ -10,7 +10,7 @@ public class MoveParallaxBackground : MonoBehaviour
     private GameObject camera;
     
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         camera = GameObject.Find("Camera System");
         startPosX = transform.position.x;
