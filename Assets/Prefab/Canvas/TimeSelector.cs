@@ -16,7 +16,7 @@ public class TimeSelector : MonoBehaviour
 
     void Awake()
     {
-        timeController = Object.FindObjectOfType<TimeController>();
+        timeController = FindObjectOfType<TimeController>();
         timeText = gameObject.transform.GetChild(0).gameObject.GetComponent<TextMeshProUGUI>();
 
         GameObject timeScale = gameObject.transform.GetChild(1).gameObject;
@@ -31,17 +31,13 @@ public class TimeSelector : MonoBehaviour
         btn_Fast.onClick.AddListener(timeController.setTimeFast);
         btn_Faster.onClick.AddListener(timeController.setTimeFaster);
         btn_Fastest.onClick.AddListener(timeController.setTimeFastest);
-
-
-        //add listener to buttons
     }
 
     // Update is called once per frame
     void Update()
     {
-        //read from timecontroller and display time on time text
         timeText.text = timeController.getTime();
 
-        //listen to key press and change time scale
+        //change button color to show selected state
     }
 }

@@ -5,51 +5,94 @@ using System.Runtime.CompilerServices;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public class CameraSystem : BaseSingleton<CameraSystem>
+public class PlayerController : BaseSingleton<PlayerController>
 {
     [SerializeField] private float moveSpeed = 5, sprintMult = 5;
     [SerializeField] private int edgeScrollBuffer = 10;
-    [SerializeField] private float minPosX = -100, minPosY = -100, maxPosX = 100, maxPosY = 100;
     [SerializeField] private float zoomSpeed = 20;
     [SerializeField] private float minZoom = 10, maxZoom = -30;
 
+    private MapSize mapSize;
+    private float minPosX, minPosY, maxPosX, maxPosY;
+    private TestGrid gridHeatRef;
+
     public GameObject followCamTarget = null;
+
+    private Vector3 mousePos, screenPos;
+    private Vector3 dragLMBstart, dragLMBend;
 
 
     private bool b_IsLMB = false, b_IsRMB = false;
 
+    private void Awake()
+    {
+        //assign reference to map size
+        mapSize = FindAnyObjectByType<MapSize>();
+
+        gridHeatRef = gameObject.transform.parent.parent.GetChild(1).GetComponent<TestGrid>();
+        minPosX = mapSize.getOriginPos().x;
+        minPosY = mapSize.getOriginPos().y;
+        maxPosX = -mapSize.getOriginPos().x;
+        maxPosY = -mapSize.getOriginPos().y;
+    }
+
     // Update is called once per frame
     void Update()
     {
+        if (minPosX == maxPosX && minPosY == maxPosY)           //primitive bounds lock since min and max pos should not be equal,
+                                                                //should be replaced with screen loading to ensure managers are created before controllers
+        {
+            minPosX = mapSize.getOriginPos().x;
+            minPosY = mapSize.getOriginPos().y;
+            maxPosX = -mapSize.getOriginPos().x;
+            maxPosY = -mapSize.getOriginPos().y;
+        }
+        
         //mouse input
         {
+            screenPos = Input.mousePosition;
+            screenPos.z -= Camera.main.transform.position.z;
+            mousePos = Camera.main.ScreenToWorldPoint(screenPos);
+
             if (!b_IsLMB && Input.GetMouseButton(0))           //LMB down
             {
-                //do smth
                 b_IsLMB = true;
+                dragLMBstart = screenPos;
+                //set value
+                //increments of 5
+                gridHeatRef.gridArray.setValue(mousePos, gridHeatRef.gridArray.getValue(mousePos) + 5);
+            }
+            else if (b_IsLMB && Input.GetMouseButton(0))       //LMB pressed, exclude first and last frame
+            {
+                dragLMBend = screenPos;
             }
             else if (b_IsLMB && !Input.GetMouseButton(0))      //LMB up
             {
-                //do smth
                 b_IsLMB = false;
+                //based on start and end, do smth
+
+                dragLMBstart = dragLMBend = new Vector3(0, 0, 0);   //reset the position
             }
-            else if (b_IsLMB && Input.GetMouseButton(0))       //LMB pressed
+            else
             {
-                //do smth
+                //null
             }
+
             if (!b_IsRMB && Input.GetMouseButton(0))           //RMB down
             {
-                //do smth
                 b_IsRMB = true;
+            }
+            else if (b_IsRMB && Input.GetMouseButton(0))       //RMB pressed, exclude first and last frame
+            {
+
             }
             else if (b_IsRMB && !Input.GetMouseButton(0))      //RMB up
             {
-                //do smth
                 b_IsRMB = false;
             }
-            else if (b_IsRMB && Input.GetMouseButton(0))       //RMB pressed
+            else
             {
-                //do smth
+                //null
             }
         }
 
