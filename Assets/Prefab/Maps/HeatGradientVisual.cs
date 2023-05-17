@@ -4,11 +4,14 @@ using UnityEngine;
 
 public class HeatGradientVisual : MonoBehaviour
 {
+    private MapData mapData;                //reference to map data
+
     private BaseGrid<int> grid;
     private Mesh mesh;
 
     private void Awake()
     {
+        mapData = FindObjectOfType<MapData>();
         mesh = new Mesh();
         GetComponent<MeshFilter>().mesh = mesh;
     }
@@ -29,7 +32,7 @@ public class HeatGradientVisual : MonoBehaviour
                 Vector3 quadSize = new Vector3(1, 1) * grid.getCellSize();
 
                 int gridValue = grid.getValue(x,y);
-                float gridValueNormalized = (float)gridValue / 100;      //change toi temp min/max
+                float gridValueNormalized = ((float)gridValue - mapData.getMinTemp()) / (mapData.getMaxTemp() - mapData.getMinTemp());
                 Vector2 gridValueUV = new Vector2(gridValueNormalized, 0f);
                 AddQuad(vertices, uv, triangles, index, grid.getWorldPos(x, y) + 0.5f * quadSize, quadSize, gridValueUV);
             }

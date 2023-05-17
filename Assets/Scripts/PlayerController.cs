@@ -12,7 +12,7 @@ public class PlayerController : BaseSingleton<PlayerController>
     [SerializeField] private float zoomSpeed = 20;
     [SerializeField] private float minZoom = 10, maxZoom = -30;
 
-    private MapSize mapSize;
+    private MapData mapData;
     private float minPosX, minPosY, maxPosX, maxPosY;
     private TestGrid gridHeatRef;
 
@@ -22,18 +22,18 @@ public class PlayerController : BaseSingleton<PlayerController>
     private Vector3 dragLMBstart, dragLMBend;
 
 
-    private bool b_IsLMB = false, b_IsRMB = false;
+    private bool b_IsLMB = false, b_IsRMB = false, b_IsMMB = false;
 
     private void Awake()
     {
         //assign reference to map size
-        mapSize = FindAnyObjectByType<MapSize>();
+        mapData = FindAnyObjectByType<MapData>();
 
         gridHeatRef = gameObject.transform.parent.parent.GetChild(1).GetComponent<TestGrid>();
-        minPosX = mapSize.getOriginPos().x;
-        minPosY = mapSize.getOriginPos().y;
-        maxPosX = -mapSize.getOriginPos().x;
-        maxPosY = -mapSize.getOriginPos().y;
+        minPosX = mapData.getOriginPos().x;
+        minPosY = mapData.getOriginPos().y;
+        maxPosX = -mapData.getOriginPos().x;
+        maxPosY = -mapData.getOriginPos().y;
     }
 
     // Update is called once per frame
@@ -42,10 +42,10 @@ public class PlayerController : BaseSingleton<PlayerController>
         if (minPosX == maxPosX && minPosY == maxPosY)           //primitive bounds lock since min and max pos should not be equal,
                                                                 //should be replaced with screen loading to ensure managers are created before controllers
         {
-            minPosX = mapSize.getOriginPos().x;
-            minPosY = mapSize.getOriginPos().y;
-            maxPosX = -mapSize.getOriginPos().x;
-            maxPosY = -mapSize.getOriginPos().y;
+            minPosX = mapData.getOriginPos().x;
+            minPosY = mapData.getOriginPos().y;
+            maxPosX = -mapData.getOriginPos().x;
+            maxPosY = -mapData.getOriginPos().y;
         }
         
         //mouse input
@@ -59,8 +59,9 @@ public class PlayerController : BaseSingleton<PlayerController>
                 b_IsLMB = true;
                 dragLMBstart = screenPos;
                 //set value
-                //increments of 5
-                gridHeatRef.gridArray.setValue(mousePos, gridHeatRef.gridArray.getValue(mousePos) + 5);
+                //increments of 10
+                int temp = Mathf.Clamp(gridHeatRef.heatArray.getValue(mousePos) + 10, mapData.getMinTemp(), mapData.getMaxTemp());
+                gridHeatRef.heatArray.setValue(mousePos, temp);
             }
             else if (b_IsLMB && Input.GetMouseButton(0))       //LMB pressed, exclude first and last frame
             {
@@ -78,17 +79,38 @@ public class PlayerController : BaseSingleton<PlayerController>
                 //null
             }
 
-            if (!b_IsRMB && Input.GetMouseButton(0))           //RMB down
+            if (!b_IsRMB && Input.GetMouseButton(1))           //RMB down
             {
                 b_IsRMB = true;
+
+                //increments of 10
+                int temp = Mathf.Clamp(gridHeatRef.heatArray.getValue(mousePos) - 10, mapData.getMinTemp(), mapData.getMaxTemp());
+                gridHeatRef.heatArray.setValue(mousePos, temp);
             }
-            else if (b_IsRMB && Input.GetMouseButton(0))       //RMB pressed, exclude first and last frame
+            else if (b_IsRMB && Input.GetMouseButton(1))       //RMB pressed, exclude first and last frame
             {
 
             }
-            else if (b_IsRMB && !Input.GetMouseButton(0))      //RMB up
+            else if (b_IsRMB && !Input.GetMouseButton(1))      //RMB up
             {
                 b_IsRMB = false;
+            }
+            else
+            {
+                //null
+            }
+
+            if (!b_IsMMB && Input.GetMouseButton(2))           //MMB down
+            {
+                b_IsMMB = true;
+            }
+            else if (b_IsMMB && Input.GetMouseButton(2))       //MMB pressed, exclude first and last frame
+            {
+
+            }
+            else if (b_IsMMB && !Input.GetMouseButton(2))      //MMB up
+            {
+                b_IsMMB = false;
             }
             else
             {

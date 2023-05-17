@@ -5,30 +5,37 @@ using UnityEngine;
 
 public class TestGrid : MonoBehaviour
 {
-    private MapSize mapSize;                //reference to map size
+    private MapData mapData;                //reference to map data
 
-    public BaseGrid<int> gridArray = new BaseGrid<int>();
-
+    public BaseGrid<int> heatArray = new BaseGrid<int>();
     private TextMesh[,] debugTextArray;
-    private bool displayDebug = true;
-
+    private bool displayDebug = false;
     [SerializeField] private HeatGradientVisual heatmap;
+
+    //null for now
+    public BaseGrid<int> damageArray = new BaseGrid<int>();
+    public BaseGrid<GameObject> NPCArray = new BaseGrid<GameObject>();
+    public BaseGrid<GameObject> structureArray = new BaseGrid<GameObject>();
+    public BaseGrid<GameObject> floorArray = new BaseGrid<GameObject>();
+    public BaseGrid<int> accessArray = new BaseGrid<int>();
+
 
     void Awake()
     {
-        mapSize = FindObjectOfType<MapSize>();
-        gridArray.generateGrid(mapSize);
+        mapData = FindObjectOfType<MapData>();
+        heatArray.generateGrid(mapData);
 
-        heatmap.SetGrid(gridArray);
+        heatmap.SetGrid(heatArray);
 
 
         //create debug text on grid
-        debugTextArray = new TextMesh[mapSize.getWidth(), mapSize.getHeight()];
-        for (int x = 0; x < mapSize.getWidth(); ++x)
+        debugTextArray = new TextMesh[mapData.getWidth(), mapData.getHeight()];
+        for (int x = 0; x < mapData.getWidth(); ++x)
         {
-            for (int y = 0; y < mapSize.getHeight(); ++y)
+            for (int y = 0; y < mapData.getHeight(); ++y)
             {
-                debugTextArray[x, y] = createWorldText(gridArray.getValue(x, y).ToString(), gameObject.transform, gridArray.getWorldPos(x, y) + new Vector3(mapSize.getCellSize() / 2, mapSize.getCellSize() / 2, 0));
+                //heat 
+                debugTextArray[x, y] = createWorldText(heatArray.getValue(x, y).ToString(), gameObject.transform, heatArray.getWorldPos(x, y) + new Vector3(mapData.getCellSize() / 2, mapData.getCellSize() / 2, 0));
             }
         }
     }
@@ -50,35 +57,40 @@ public class TestGrid : MonoBehaviour
     }
 
     //call this function when you press the overlay button
-    public void toggleDebug(bool state)
+    public void toggleDebug()
     {
-        displayDebug = state;
-        for (int x = 0; x < mapSize.getWidth(); ++x)
+        displayDebug = !displayDebug;
+        for (int x = 0; x < mapData.getWidth(); ++x)
         {
-            for (int y = 0; y < mapSize.getHeight(); ++y)
+            for (int y = 0; y < mapData.getHeight(); ++y)
             {
                 debugTextArray[x, y].gameObject.SetActive(displayDebug);
             }
         }
     }
 
+    public void addRadial(int intensity, int range)
+    {
+
+    }
+
     // Update is called once per frame
     void Update()
     {
-        //get update value from base grid and player controller
-        if (gridArray.getRebuild() == true)
+        //heat map
+        if (heatArray.getRebuild() == true)
         {
             //rebuild the array
-            for (int x = 0; x < mapSize.getWidth(); ++x)
+            for (int x = 0; x < mapData.getWidth(); ++x)
             {
-                for (int y = 0; y < mapSize.getHeight(); ++y)
+                for (int y = 0; y < mapData.getHeight(); ++y)
                 {
-                    debugTextArray[x, y].text = gridArray.getValue(x, y).ToString();
+                    debugTextArray[x, y].text = heatArray.getValue(x, y).ToString();
                 }
             }
             heatmap.updateMeshVisual();
 
-            gridArray.setRebuild(false);
+            heatArray.setRebuild(false);
         }
     }
 }

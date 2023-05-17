@@ -728,6 +728,10 @@ PrefabInstance:
       value: 32
       objectReference: {fileID: 0}
     - target: {fileID: 7925703602855847690, guid: aad5ee9def27734428899297d292eaea, type: 3}
+      propertyPath: minTemp
+      value: -300
+      objectReference: {fileID: 0}
+    - target: {fileID: 7925703602855847690, guid: aad5ee9def27734428899297d292eaea, type: 3}
       propertyPath: cellSize
       value: 1
       objectReference: {fileID: 0}

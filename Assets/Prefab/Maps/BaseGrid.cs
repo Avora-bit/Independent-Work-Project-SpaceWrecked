@@ -1,16 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class BaseGrid<GridType>
 {
-    private MapSize mapSize;                //reference to map size
+    private MapData mapSize;                //reference to map size
     private GridType[,] gridArray;
 
     private bool bRebuild = false;
 
-    public void generateGrid(MapSize mapSize)
+    public void generateGrid(MapData mapSize)
     {
         this.mapSize = mapSize;
         gridArray = new GridType[mapSize.getWidth(), mapSize.getHeight()];
@@ -24,7 +23,7 @@ public class BaseGrid<GridType>
         {
             Debug.DrawLine(getWorldPos(0, y), getWorldPos(mapSize.getWidth(), y), Color.white, 100f);
         }
-        
+
     }
 
     public int getWidth()
@@ -75,7 +74,7 @@ public class BaseGrid<GridType>
     {
         if (checkValid(x, y))
         {
-            gridArray[x, y] = value; 
+            gridArray[x, y] = value;
             bRebuild = true;
         }
     }
@@ -86,17 +85,6 @@ public class BaseGrid<GridType>
         getXY(worldPos, out x, out y);
         setValue(x, y, value);
     }
-    public void addValue(int x, int y, GridType value)
-    {
-        //setValue(x, y, getValue(x, y) + value);
-    }
-    public void addValue(Vector3 worldPos, GridType value)
-    {
-        int x, y;
-        getXY(worldPos, out x, out y);
-        addValue(x, y, value);
-    }
-
     public bool getRebuild()
     {
         return bRebuild;
@@ -118,4 +106,5 @@ public class BaseGrid<GridType>
 
         bRebuild = true;        //rebuild only at end
     }
+
 }
