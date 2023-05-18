@@ -261,6 +261,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Grid System
       objectReference: {fileID: 0}
+    - target: {fileID: 8153672938824062032, guid: b4b6cd49b9fda5141aed4685f3f156c4, type: 3}
+      propertyPath: m_Name
+      value: Visual Overlay
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b4b6cd49b9fda5141aed4685f3f156c4, type: 3}
 --- !u!4 &984426104797274491 stripped

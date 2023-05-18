@@ -14,7 +14,7 @@ public class PlayerController : BaseSingleton<PlayerController>
 
     private MapData mapData;
     private float minPosX, minPosY, maxPosX, maxPosY;
-    private TestGrid gridHeatRef;
+    private TestGrid testGrid;
 
     public GameObject followCamTarget = null;
 
@@ -29,7 +29,7 @@ public class PlayerController : BaseSingleton<PlayerController>
         //assign reference to map size
         mapData = FindAnyObjectByType<MapData>();
 
-        gridHeatRef = gameObject.transform.parent.parent.GetChild(1).GetComponent<TestGrid>();
+        testGrid = gameObject.transform.parent.parent.GetChild(1).GetComponent<TestGrid>();
         minPosX = mapData.getOriginPos().x;
         minPosY = mapData.getOriginPos().y;
         maxPosX = -mapData.getOriginPos().x;
@@ -58,10 +58,11 @@ public class PlayerController : BaseSingleton<PlayerController>
             {
                 b_IsLMB = true;
                 dragLMBstart = screenPos;
-                //set value
                 //increments of 10
-                int temp = Mathf.Clamp(gridHeatRef.heatArray.getValue(mousePos) + 10, mapData.getMinTemp(), mapData.getMaxTemp());
-                gridHeatRef.heatArray.setValue(mousePos, temp);
+                int temp = Mathf.Clamp(testGrid.arrayHeat.getValue(mousePos) + 10, mapData.getMinTemp(), mapData.getMaxTemp());
+                testGrid.arrayHeat.setValue(mousePos, temp);
+
+                //testGrid.arrayAccess.setValue(mousePos, 1);
             }
             else if (b_IsLMB && Input.GetMouseButton(0))       //LMB pressed, exclude first and last frame
             {
@@ -84,8 +85,10 @@ public class PlayerController : BaseSingleton<PlayerController>
                 b_IsRMB = true;
 
                 //increments of 10
-                int temp = Mathf.Clamp(gridHeatRef.heatArray.getValue(mousePos) - 10, mapData.getMinTemp(), mapData.getMaxTemp());
-                gridHeatRef.heatArray.setValue(mousePos, temp);
+                int temp = Mathf.Clamp(testGrid.arrayHeat.getValue(mousePos) - 10, mapData.getMinTemp(), mapData.getMaxTemp());
+                testGrid.arrayHeat.setValue(mousePos, temp);
+
+                //testGrid.arrayAccess.setValue(mousePos, 0);
             }
             else if (b_IsRMB && Input.GetMouseButton(1))       //RMB pressed, exclude first and last frame
             {

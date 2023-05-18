@@ -4,57 +4,46 @@ using UnityEngine;
 
 public class BaseGrid<GridType>
 {
-    private MapData mapSize;                //reference to map size
+    private MapData mapData;                //reference to map size
     private GridType[,] gridArray;
 
-    private bool bRebuild = false;
+    private bool bRebuild = false;          //if need rebuild
 
     public void generateGrid(MapData mapSize)
     {
-        this.mapSize = mapSize;
+        this.mapData = mapSize;
         gridArray = new GridType[mapSize.getWidth(), mapSize.getHeight()];
-
-        //draw grid lines
-        for (int x = 0; x < gridArray.GetLength(0) + 1; x++)
-        {
-            Debug.DrawLine(getWorldPos(x, 0), getWorldPos(x, mapSize.getHeight()), Color.white, 100f);
-        }
-        for (int y = 0; y < gridArray.GetLength(1) + 1; y++)
-        {
-            Debug.DrawLine(getWorldPos(0, y), getWorldPos(mapSize.getWidth(), y), Color.white, 100f);
-        }
-
     }
 
     public int getWidth()
     {
-        return mapSize.getWidth();
+        return mapData.getWidth();
     }
     public int getHeight()
     {
-        return mapSize.getHeight();
+        return mapData.getHeight();
     }
 
     public float getCellSize()
     {
-        return mapSize.getCellSize();
+        return mapData.getCellSize();
     }
 
     public bool checkValid(int x, int y)
     {
-        return (x >= 0 && x <= mapSize.getWidth()) &&
-            (y >= 0 && y <= mapSize.getHeight());
+        return (x >= 0 && x <= mapData.getWidth()) &&
+            (y >= 0 && y <= mapData.getHeight());
     }
 
     public Vector3 getWorldPos(int x, int y)
     {
-        return new Vector3(x, y, 0) * mapSize.getCellSize() + mapSize.getOriginPos();
+        return new Vector3(x, y, 0) * mapData.getCellSize() + mapData.getOriginPos();
 
     }
     public void getXY(Vector3 worldPos, out int x, out int y)
     {
-        x = Mathf.FloorToInt((worldPos - mapSize.getOriginPos()).x / mapSize.getCellSize());
-        y = Mathf.FloorToInt((worldPos - mapSize.getOriginPos()).y / mapSize.getCellSize());
+        x = Mathf.FloorToInt((worldPos - mapData.getOriginPos()).x / mapData.getCellSize());
+        y = Mathf.FloorToInt((worldPos - mapData.getOriginPos()).y / mapData.getCellSize());
     }
 
     public GridType getValue(int x, int y)
@@ -85,26 +74,7 @@ public class BaseGrid<GridType>
         getXY(worldPos, out x, out y);
         setValue(x, y, value);
     }
-    public bool getRebuild()
-    {
-        return bRebuild;
-    }
-
-    public void setRebuild(bool state)
-    {
-        bRebuild = state;
-    }
-
-    public void addValueRadial(Vector3 worldPos, GridType value, int range)
-    {
-        getXY(worldPos, out int originX, out int originY);
-        for (int x = 0; x < range; x++) {
-            for (int y = 0; y < range; y++) {
-
-            }
-        }
-
-        bRebuild = true;        //rebuild only at end
-    }
+    public bool getRebuild() { return bRebuild; }
+    public void setRebuild(bool state) { bRebuild = state; }
 
 }

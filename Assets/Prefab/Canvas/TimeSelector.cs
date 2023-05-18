@@ -21,19 +21,20 @@ public class TimeSelector : MonoBehaviour
 
         GameObject timeScale = gameObject.transform.GetChild(1).gameObject;
         btn_Pause = timeScale.transform.Find("Btn_Pause").GetComponent<Button>();
-        btn_Play = timeScale.transform.Find("Btn_Play").GetComponent<Button>();
-        btn_Fast = timeScale.transform.Find("Btn_Fast").GetComponent<Button>();
-        btn_Faster = timeScale.transform.Find("Btn_Faster").GetComponent<Button>();
-        btn_Fastest = timeScale.transform.Find("Btn_Fastest").GetComponent<Button>();
-
         btn_Pause.onClick.AddListener(timeController.pauseToggle);
+
+        btn_Play = timeScale.transform.Find("Btn_Play").GetComponent<Button>();
         btn_Play.onClick.AddListener(timeController.setTimeNormal);
+
+        btn_Fast = timeScale.transform.Find("Btn_Fast").GetComponent<Button>();
         btn_Fast.onClick.AddListener(timeController.setTimeFast);
+
+        btn_Faster = timeScale.transform.Find("Btn_Faster").GetComponent<Button>();
         btn_Faster.onClick.AddListener(timeController.setTimeFaster);
+
+        btn_Fastest = timeScale.transform.Find("Btn_Fastest").GetComponent<Button>();
         btn_Fastest.onClick.AddListener(timeController.setTimeFastest);
     }
-
-    // Update is called once per frame
     void Update()
     {
         timeText.text = timeController.getTime();
