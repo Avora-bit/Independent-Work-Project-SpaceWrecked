@@ -59,10 +59,12 @@ public class PlayerController : BaseSingleton<PlayerController>
                 b_IsLMB = true;
                 dragLMBstart = screenPos;
                 //increments of 10
-                int temp = Mathf.Clamp(testGrid.arrayHeat.getValue(mousePos) + 10, mapData.getMinTemp(), mapData.getMaxTemp());
-                testGrid.arrayHeat.setValue(mousePos, temp);
+                //int temp = Mathf.Clamp(testGrid.arrayHeat.getValue(mousePos) + 10, mapData.getMinTemp(), mapData.getMaxTemp());
+                //testGrid.arrayHeat.setGridObject(mousePos, temp);
 
-                //testGrid.arrayAccess.setValue(mousePos, 1);
+                //testGrid.arrayAccess.setGridObject(mousePos, 1);
+
+                //testGrid.pathfindingGrid.setGridObject(mousePos, 1);
             }
             else if (b_IsLMB && Input.GetMouseButton(0))       //LMB pressed, exclude first and last frame
             {
@@ -85,10 +87,12 @@ public class PlayerController : BaseSingleton<PlayerController>
                 b_IsRMB = true;
 
                 //increments of 10
-                int temp = Mathf.Clamp(testGrid.arrayHeat.getValue(mousePos) - 10, mapData.getMinTemp(), mapData.getMaxTemp());
-                testGrid.arrayHeat.setValue(mousePos, temp);
+                //int temp = Mathf.Clamp(testGrid.arrayHeat.getValue(mousePos) - 10, mapData.getMinTemp(), mapData.getMaxTemp());
+                //testGrid.arrayHeat.setGridObject(mousePos, temp);
 
                 //testGrid.arrayAccess.setValue(mousePos, 0);
+
+                //testGrid.pathfindingGrid.setGridObject(mousePos, 1);
             }
             else if (b_IsRMB && Input.GetMouseButton(1))       //RMB pressed, exclude first and last frame
             {

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -9,10 +10,17 @@ public class BaseGrid<GridType>
 
     private bool bRebuild = false;          //if need rebuild
 
-    public void generateGrid(MapData mapSize)
+    public void generateGrid(MapData mapData, Func<BaseGrid<GridType>, int, int, GridType> createGridObject)
     {
-        this.mapData = mapSize;
-        gridArray = new GridType[mapSize.getWidth(), mapSize.getHeight()];
+        //map data handles the width, height, size and starting vector
+        this.mapData = mapData;
+        gridArray = new GridType[mapData.getWidth(), mapData.getHeight()];
+
+        for (int x = 0; x < mapData.getWidth(); x++) {
+            for (int y = 0; y < mapData.getHeight(); y++) {
+                gridArray[x, y] = createGridObject(this, x, y);
+            }
+        }
     }
 
     public int getWidth()
@@ -31,8 +39,8 @@ public class BaseGrid<GridType>
 
     public bool checkValid(int x, int y)
     {
-        return (x >= 0 && x <= mapData.getWidth()) &&
-            (y >= 0 && y <= mapData.getHeight());
+        return (x >= 0 && x < mapData.getWidth()) &&
+            (y >= 0 && y < mapData.getHeight());
     }
 
     public Vector3 getWorldPos(int x, int y)
@@ -46,20 +54,20 @@ public class BaseGrid<GridType>
         y = Mathf.FloorToInt((worldPos - mapData.getOriginPos()).y / mapData.getCellSize());
     }
 
-    public GridType getValue(int x, int y)
+    public GridType getGridObject(int x, int y)
     {
         if (checkValid(x, y)) return gridArray[x, y];
         else return default;
     }
 
-    public GridType getValue(Vector3 worldPos)
+    public GridType getGridObject(Vector3 worldPos)
     {
         int x, y;
         getXY(worldPos, out x, out y);
-        return getValue(x, y);
+        return getGridObject(x, y);
     }
 
-    public void setValue(int x, int y, GridType value)
+    public void setGridObject(int x, int y, GridType value)
     {
         if (checkValid(x, y))
         {
@@ -68,13 +76,12 @@ public class BaseGrid<GridType>
         }
     }
 
-    public void setValue(Vector3 worldPos, GridType value)
+    public void setGridObject(Vector3 worldPos, GridType value)
     {
         int x, y;
         getXY(worldPos, out x, out y);
-        setValue(x, y, value);
+        setGridObject(x, y, value);
     }
     public bool getRebuild() { return bRebuild; }
     public void setRebuild(bool state) { bRebuild = state; }
-
 }

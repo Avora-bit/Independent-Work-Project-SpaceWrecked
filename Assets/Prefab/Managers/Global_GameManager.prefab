@@ -88,9 +88,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b84b2c81616c16a4594fcc0b39e08e61, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  width: 128
-  height: 128
+  width: 64
+  height: 64
   cellSize: 1
+  minTemp: -300
+  maxTemp: 1000
+  minComfortableTemp: 10
+  maxComfortableTemp: 50
 --- !u!1 &7946825545265841045
 GameObject:
   m_ObjectHideFlags: 0

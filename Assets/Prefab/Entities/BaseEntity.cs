@@ -15,7 +15,7 @@ public class BaseEntity : MonoBehaviour
     private float rateMove, rateWork, rateLearn, rateResearch;
     private float maxCapacity, currCapacity;
 
-    private int targetPtr;            //pointer to object
+    private GameObject targetPtr;            //pointer to object
 
     // FSM States
     enum FSMstates

@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 public class OverlaySelector : MonoBehaviour
 {
-    Button btn_Heat, btn_Access;
+    Button btn_Heat, btn_Access, btn_Path;
 
     void Awake()
     {
@@ -18,7 +18,8 @@ public class OverlaySelector : MonoBehaviour
         btn_Access = gameObject.transform.Find("Btn_Structure").GetComponent<Button>();
         btn_Access.onClick.AddListener(testGrid.toggleAccess);
 
-
+        btn_Path = gameObject.transform.Find("Btn_Pathfinding").GetComponent<Button>();
+        btn_Path.onClick.AddListener(testGrid.togglePathfinding);
     }
 
     void Update()
