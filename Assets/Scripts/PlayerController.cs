@@ -61,27 +61,12 @@ public class PlayerController : BaseSingleton<PlayerController>
                 //increments of 10
                 //int temp = Mathf.Clamp(testGrid.arrayHeat.getValue(mousePos) + 10, mapData.getMinTemp(), mapData.getMaxTemp());
                 //testGrid.arrayHeat.setGridObject(mousePos, temp);
-
-                //testGrid.arrayAccess.setGridObject(mousePos, 1);
-
-                PathNode startNode = testGrid.pathfindingGrid.getGridObject(0, 0);
-                PathNode endNode = testGrid.pathfindingGrid.getGridObject(mousePos);
-
-                List<PathNode> path = testGrid.findPath(startNode, endNode);
-                if (path != null)
-                {
-                    for (int i = 0; i < path.Count - 1; i++)
-                    {
-                        Debug.DrawLine(testGrid.pathfindingGrid.getWorldPos(path[i].x, path[i].y), testGrid.pathfindingGrid.getWorldPos(path[i + 1].x, path[i + 1].y),
-                                       Color.green, 5f);
-                    }
-                }
-
             }
             else if (b_IsLMB && Input.GetMouseButton(0))       //LMB pressed, exclude first and last frame
             {
                 dragLMBend = screenPos;
-
+                testGrid.pathfindingGrid.getGridObject(mousePos).isWalkable = false;
+                testGrid.pathfindingGrid.setRebuild(true);
             }
             else if (b_IsLMB && !Input.GetMouseButton(0))      //LMB up
             {
@@ -103,13 +88,11 @@ public class PlayerController : BaseSingleton<PlayerController>
                 //int temp = Mathf.Clamp(testGrid.arrayHeat.getValue(mousePos) - 10, mapData.getMinTemp(), mapData.getMaxTemp());
                 //testGrid.arrayHeat.setGridObject(mousePos, temp);
 
-                //testGrid.arrayAccess.setValue(mousePos, 0);
-
-                //testGrid.pathfindingGrid.setGridObject(mousePos, 1);
             }
             else if (b_IsRMB && Input.GetMouseButton(1))       //RMB pressed, exclude first and last frame
             {
-
+                testGrid.pathfindingGrid.getGridObject(mousePos).isWalkable = true;
+                testGrid.pathfindingGrid.setRebuild(true);
             }
             else if (b_IsRMB && !Input.GetMouseButton(1))      //RMB up
             {
@@ -126,7 +109,19 @@ public class PlayerController : BaseSingleton<PlayerController>
             }
             else if (b_IsMMB && Input.GetMouseButton(2))       //MMB pressed, exclude first and last frame
             {
+                PathNode startNode = testGrid.pathfindingGrid.getGridObject(0, 0);
+                PathNode endNode = testGrid.pathfindingGrid.getGridObject(mousePos);
 
+                List<PathNode> path = testGrid.findPath(startNode, endNode);
+                if (path != null)
+                {
+                    for (int i = 0; i < path.Count - 1; i++)
+                    {
+                        Debug.DrawLine(testGrid.pathfindingGrid.getWorldPosCenter(path[i].x, path[i].y),
+                                       testGrid.pathfindingGrid.getWorldPosCenter(path[i + 1].x, path[i + 1].y),
+                                       Color.green);
+                    }
+                }
             }
             else if (b_IsMMB && !Input.GetMouseButton(2))      //MMB up
             {

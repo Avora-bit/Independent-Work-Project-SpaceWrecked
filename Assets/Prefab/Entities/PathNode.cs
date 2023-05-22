@@ -9,6 +9,8 @@ public class PathNode {
     public int costG, costH, costF;
     private PathNode prevNode;
 
+    public bool isWalkable = true;
+
     public PathNode(BaseGrid<PathNode> grid, int x, int y) {
         this.grid = grid;
         this.x = x;

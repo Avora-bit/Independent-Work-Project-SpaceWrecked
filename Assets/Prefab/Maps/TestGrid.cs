@@ -23,7 +23,6 @@ public class TestGrid : MonoBehaviour
 
 
     public BaseGrid<int> arrayHeat = new BaseGrid<int>();               //get heat data
-    public BaseGrid<int> arrayAccess = new BaseGrid<int>();             //get pathfinding data, 0 for empty, 1 for filled
 
     public BaseGrid<PathNode> pathfindingGrid = new BaseGrid<PathNode>();
     private List<PathNode> openList;                //list to allow for data manipulation
@@ -60,13 +59,14 @@ public class TestGrid : MonoBehaviour
 
         //create grids with data type
         arrayHeat.generateGrid(mapData, (arrayHeat, x, y) => 0);
-        arrayAccess.generateGrid(mapData, (arrayAccess, x, y) => 0);
 
         pathfindingGrid.generateGrid(mapData, (pathfindingGrid, x, y) => new PathNode(pathfindingGrid, x, y));             //prove that generics accept custom game objects
 
     }
 
     public List<PathNode> findPath(PathNode startnode, PathNode endnode) {
+        if (startnode == null || endnode == null) return null;
+
         openList = new List<PathNode> { startnode };
         closedList = new HashSet<PathNode>();
 
@@ -87,8 +87,19 @@ public class TestGrid : MonoBehaviour
             PathNode currNode = getLowestFCostNode(openList);
             if (currNode == endnode) return calculatePath(endnode);
             openList.Remove(currNode); closedList.Add(currNode);
+
             foreach (PathNode neighbourNode in getNeighbours(currNode)) {
                 if (closedList.Contains(neighbourNode)) continue;
+                if (!neighbourNode.isWalkable) { closedList.Add(neighbourNode); continue; }
+                //diagonal movement check;
+                if (calculateDistanceCost(currNode, neighbourNode) == MOVE_DIAGONAL_COST)           //check if this is diagonal
+                {
+                    int dirX = neighbourNode.x - currNode.x;
+                    int dirY = neighbourNode.y - currNode.y;
+                    if (!pathfindingGrid.getGridObject(currNode.x + dirX, currNode.y).isWalkable &&
+                        !pathfindingGrid.getGridObject(currNode.x, currNode.y + dirY).isWalkable) continue;     //ignore
+                }
+
                 int tempCostG = currNode.costG + calculateDistanceCost(currNode, neighbourNode);
                 if (tempCostG < neighbourNode.costG) {
                     neighbourNode.setPrevNode(currNode);
@@ -166,28 +177,13 @@ public class TestGrid : MonoBehaviour
                 break;
             case 2:
                 //access visual
-                if (arrayAccess.getRebuild()) {
+                if (pathfindingGrid.getRebuild()) {
                     for (int x = 0; x < mapData.getWidth(); ++x) {
                         for (int y = 0; y < mapData.getHeight(); ++y) {
-                            debugTextArray[x, y].text = arrayAccess.getGridObject(x, y).ToString();
-                        }
-                    }
-                    updateMeshVisual(arrayAccess);
-                    arrayAccess.setRebuild(false);
-                }
-                meshRenderer.enabled = true;
-                break;
-            case 3:
-                //pathfinding, no mesh
-                if (pathfindingGrid.getRebuild())
-                {
-                    for (int x = 0; x < mapData.getWidth(); ++x)
-                    {
-                        for (int y = 0; y < mapData.getHeight(); ++y)
-                        {
                             debugTextArray[x, y].text = pathfindingGrid.getGridObject(x, y).ToString();
                         }
                     }
+                    updateMeshVisual(pathfindingGrid);
                     pathfindingGrid.setRebuild(false);
                 }
                 meshRenderer.enabled = true;
@@ -268,12 +264,28 @@ public class TestGrid : MonoBehaviour
                     Vector2 gridValueUV = new Vector2(gridValueNormalized, 0f);
                     AddQuad(vertices, uv, triangles, index, arrayType.getWorldPos(x, y) + 0.5f * quadSize, quadSize, gridValueUV);
                 }
-                else if (arrayType == arrayAccess)
-                {
-                    Vector2 gridValueUV = new Vector2(gridValue, 0f);
-                    AddQuad(vertices, uv, triangles, index, arrayType.getWorldPos(x, y) + 0.5f * quadSize, quadSize, gridValueUV);
-                }
+            }
+        }
+        mesh.vertices = vertices;
+        mesh.uv = uv;
+        mesh.triangles = triangles;
+    }
 
+    public void updateMeshVisual(BaseGrid<PathNode> pathArray)
+    {
+        CreateEmptyMeshData(mapData.getWidth() * mapData.getHeight(),
+            out Vector3[] vertices, out Vector2[] uv, out int[] triangles);
+
+        for (int x = 0; x < mapData.getWidth(); x++)
+        {
+            for (int y = 0; y < mapData.getHeight(); y++)
+            {
+                int index = x * mapData.getHeight() + y;
+                Vector3 quadSize = new Vector3(1, 1) * mapData.getCellSize();
+
+                bool walkable = pathArray.getGridObject(x, y).isWalkable;
+                Vector2 gridValueUV = new Vector2(walkable == false ? 0 : 1, 0f);
+                AddQuad(vertices, uv, triangles, index, pathArray.getWorldPos(x, y) + 0.5f * quadSize, quadSize, gridValueUV);
 
             }
         }
@@ -282,6 +294,7 @@ public class TestGrid : MonoBehaviour
         mesh.uv = uv;
         mesh.triangles = triangles;
     }
+
     private void AddQuad(Vector3[] vertices, Vector2[] uvs, int[] triangles, int index, Vector3 GridPos, Vector3 QuadSize, Vector2 Uv)
     {
         vertices[index * 4] = new Vector3((-0.5f + GridPos.x) * QuadSize.x, (-0.5f + GridPos.y) * QuadSize.y);
@@ -324,29 +337,16 @@ public class TestGrid : MonoBehaviour
             }
         }
     }
-    public void toggleAccess()
+    public void togglePathfinding()
     {
         if (renderLayer == 2) renderLayer = 0;
         else {
             meshRenderer.material = tempMaterials[1];
-            updateMeshVisual(arrayAccess);
+            updateMeshVisual(pathfindingGrid);
             renderLayer = 2;
             for (int x = 0; x < mapData.getWidth(); ++x) {
                 for (int y = 0; y < mapData.getHeight(); ++y) {
-                    debugTextArray[x, y].gameObject.SetActive(true);
-                    debugTextArray[x, y].text = arrayAccess.getGridObject(x, y).ToString();
-                }
-            }
-        }
-    }
-    public void togglePathfinding()
-    {
-        if (renderLayer == 3) renderLayer = 0;
-        else {
-            renderLayer = 3;
-            for (int x = 0; x < mapData.getWidth(); ++x) {
-                for (int y = 0; y < mapData.getHeight(); ++y) {
-                    debugTextArray[x, y].gameObject.SetActive(true);
+                    debugTextArray[x, y].gameObject.SetActive(false);
                     debugTextArray[x, y].text = pathfindingGrid.getGridObject(x, y).ToString();
                 }
             }

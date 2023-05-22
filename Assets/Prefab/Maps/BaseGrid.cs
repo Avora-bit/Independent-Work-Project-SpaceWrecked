@@ -46,8 +46,13 @@ public class BaseGrid<GridType>
     public Vector3 getWorldPos(int x, int y)
     {
         return new Vector3(x, y, 0) * mapData.getCellSize() + mapData.getOriginPos();
-
     }
+    public Vector3 getWorldPosCenter(int x, int y)
+    {
+        return new Vector3(x, y, 0) * mapData.getCellSize() + mapData.getOriginPos() +
+               new Vector3(mapData.getCellSize() / 2, mapData.getCellSize() / 2, 0);
+    }
+
     public void getXY(Vector3 worldPos, out int x, out int y)
     {
         x = Mathf.FloorToInt((worldPos - mapData.getOriginPos()).x / mapData.getCellSize());
