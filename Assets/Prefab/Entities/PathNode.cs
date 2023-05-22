@@ -20,5 +20,7 @@ public class PathNode {
     public void setPrevNode(PathNode node) { prevNode = node; }
     public PathNode getPrevNode() { return prevNode; }
 
-
+    public void calculateCostF() {
+        costF = costG + costH;
+    }
 }

@@ -64,11 +64,24 @@ public class PlayerController : BaseSingleton<PlayerController>
 
                 //testGrid.arrayAccess.setGridObject(mousePos, 1);
 
-                //testGrid.pathfindingGrid.setGridObject(mousePos, 1);
+                PathNode startNode = testGrid.pathfindingGrid.getGridObject(0, 0);
+                PathNode endNode = testGrid.pathfindingGrid.getGridObject(mousePos);
+
+                List<PathNode> path = testGrid.findPath(startNode, endNode);
+                if (path != null)
+                {
+                    for (int i = 0; i < path.Count - 1; i++)
+                    {
+                        Debug.DrawLine(testGrid.pathfindingGrid.getWorldPos(path[i].x, path[i].y), testGrid.pathfindingGrid.getWorldPos(path[i + 1].x, path[i + 1].y),
+                                       Color.green, 5f);
+                    }
+                }
+
             }
             else if (b_IsLMB && Input.GetMouseButton(0))       //LMB pressed, exclude first and last frame
             {
                 dragLMBend = screenPos;
+
             }
             else if (b_IsLMB && !Input.GetMouseButton(0))      //LMB up
             {

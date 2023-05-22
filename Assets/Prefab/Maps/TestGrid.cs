@@ -2,6 +2,8 @@ using Mono.Cecil;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting.Antlr3.Runtime.Collections;
+using UnityEditor;
 using UnityEngine;
 
 public class TestGrid : MonoBehaviour
@@ -23,7 +25,11 @@ public class TestGrid : MonoBehaviour
     public BaseGrid<int> arrayHeat = new BaseGrid<int>();               //get heat data
     public BaseGrid<int> arrayAccess = new BaseGrid<int>();             //get pathfinding data, 0 for empty, 1 for filled
 
-    public BaseGrid<PathNode> pathfindingGrid;
+    public BaseGrid<PathNode> pathfindingGrid = new BaseGrid<PathNode>();
+    private List<PathNode> openList;                //list to allow for data manipulation
+    private HashSet<PathNode> closedList;           //generic hashset to check if it contains neighbour
+    private const int MOVE_STRAIGHT_COST = 10;
+    private const int MOVE_DIAGONAL_COST = 14;              //sqrt of 10+10
 
     //null for now
     public BaseGrid<GameObject> NPCArray = new BaseGrid<GameObject>();
@@ -36,14 +42,14 @@ public class TestGrid : MonoBehaviour
 
         //create debug text on grid
         debugTextArray = new TextMesh[mapData.getWidth(), mapData.getHeight()];
-        for (int x = 0; x < mapData.getWidth(); ++x)
-        {
-            for (int y = 0; y < mapData.getHeight(); ++y)
-            {
+        for (int x = 0; x < mapData.getWidth(); ++x) {
+            for (int y = 0; y < mapData.getHeight(); ++y) {
                 debugTextArray[x, y] = createWorldText("0", gameObject.transform, mapData.getOriginPos() +
                     new Vector3(mapData.getCellSize() * x, mapData.getCellSize() * y, 0) +
                     new Vector3(mapData.getCellSize() / 2, mapData.getCellSize() / 2, 0));
                 debugTextArray[x, y].gameObject.SetActive(false);
+
+
             }
         }
 
@@ -56,7 +62,89 @@ public class TestGrid : MonoBehaviour
         arrayHeat.generateGrid(mapData, (arrayHeat, x, y) => 0);
         arrayAccess.generateGrid(mapData, (arrayAccess, x, y) => 0);
 
-        pathfindingGrid.generateGrid(mapData, (pathfindingGrid, x, y) => new PathNode(pathfindingGrid, 0, 0));             //prove that generics accept custom game objects
+        pathfindingGrid.generateGrid(mapData, (pathfindingGrid, x, y) => new PathNode(pathfindingGrid, x, y));             //prove that generics accept custom game objects
+
+    }
+
+    public List<PathNode> findPath(PathNode startnode, PathNode endnode) {
+        openList = new List<PathNode> { startnode };
+        closedList = new HashSet<PathNode>();
+
+        //cycle through all nodes and set values
+        for (int x = 0; x < mapData.getWidth(); x++) {
+            for (int y = 0; y < mapData.getHeight(); y++) {
+                PathNode node = pathfindingGrid.getGridObject(x, y);
+                node.costG = int.MaxValue;          //set to infinite value
+                node.calculateCostF();
+                node.setPrevNode(null);
+            }
+        }
+
+        startnode.costG = 0;        //starting node, cost = 0
+        startnode.costH = calculateDistanceCost(startnode, endnode);
+
+        while (openList.Count > 0) {
+            PathNode currNode = getLowestFCostNode(openList);
+            if (currNode == endnode) return calculatePath(endnode);
+            openList.Remove(currNode); closedList.Add(currNode);
+            foreach (PathNode neighbourNode in getNeighbours(currNode)) {
+                if (closedList.Contains(neighbourNode)) continue;
+                int tempCostG = currNode.costG + calculateDistanceCost(currNode, neighbourNode);
+                if (tempCostG < neighbourNode.costG) {
+                    neighbourNode.setPrevNode(currNode);
+                    neighbourNode.costG = tempCostG;
+                    neighbourNode.costH = calculateDistanceCost(neighbourNode, endnode);
+                    neighbourNode.calculateCostF();
+
+                    if (!openList.Contains(neighbourNode)) openList.Add(neighbourNode);
+                }
+            }
+        }
+        //out of nodes on open list, but path hasnt been found
+        return null;
+    }
+
+    private int calculateDistanceCost(PathNode a, PathNode b) {               //distance ignoring obstructions
+        int distX = Mathf.Abs(a.x - b.x);
+        int distY = Mathf.Abs(a.y - b.y);
+        int remaining = Mathf.Abs(distX - distY);
+        return MOVE_DIAGONAL_COST * Mathf.Min(distX, distY) + 
+               MOVE_STRAIGHT_COST * remaining;
+    }
+
+    private PathNode getLowestFCostNode(List<PathNode> pathNodeList) {
+        PathNode lowestFCostNode = pathNodeList[0];
+        for (int i = 0; i < pathNodeList.Count; i++) {
+            if (pathNodeList[i].costF < lowestFCostNode.costF) lowestFCostNode = pathNodeList[i];      //simple min comparison
+        }
+        return lowestFCostNode;
+    }
+
+    private List<PathNode> calculatePath(PathNode endNode) {
+        List<PathNode> path = new List<PathNode>();
+        path.Add(endNode);
+        PathNode currNode = endNode;
+        while (currNode.getPrevNode() != null) {
+            //cycle through all the nodes and find its "parent"
+            //until it reaches a node with no parent, aka the start node
+            path.Add(currNode.getPrevNode());
+            currNode = currNode.getPrevNode();
+        }
+        path.Reverse();         //since the first value is the end, need to reverse it. 
+        return path;
+    }
+
+    private List<PathNode> getNeighbours(PathNode currNode) {
+        List<PathNode> Neighbours = new List<PathNode>();
+        for (int x = -1; x <= 1; ++x) {
+            for (int y = -1; y <= 1; ++y) {
+                if (pathfindingGrid.checkValid(currNode.x + x, currNode.y + y)) {           //ensure that the node is a neighbour and not on edge
+                    if (x == 0 && y == 0) continue;                                         //ensure node is not itself
+                    Neighbours.Add(pathfindingGrid.getGridObject(currNode.x + x, currNode.y + y));
+                }
+            }
+        }
+        return Neighbours;
     }
 
     void Update()
@@ -118,23 +206,32 @@ public class TestGrid : MonoBehaviour
         }
 
         //diffuse heat
-        for (int x = 0; x < mapData.getWidth(); ++x) {
-            for (int y = 0; y < mapData.getHeight(); ++y) {
-                for (int z = 1; z <= 8; ++z) {
-                    int xDirection = 0, yDirection = 0;
-                    if (z == 1 || z == 4 || z == 7) xDirection = -1;
-                    else if (z == 3 || z == 6 || z == 9) xDirection = 1;
+        //replace with neighbour list type diffusion
+        //for (int x = -1; x <= 1; ++x) {
+        //    for (int y = -1; y <= 1; ++y) {
+        //        if (arrayHeat.checkValid(currNode.x + x, currNode.y + y)) {
 
-                    if (z == 1 || z == 2 || z == 3) yDirection = 1;
-                    else if (z == 7 || z == 8 || z == 9) yDirection = -1;
+        //        }
+        //    }
+        //}
 
-                    //self heat is an average of neighbour
-                    int averagetemp = (arrayHeat.getGridObject(x, y) + arrayHeat.getGridObject(x + xDirection, y + yDirection)) / 2;
-                    arrayHeat.setGridObject(x, y, averagetemp);
-                    arrayHeat.setGridObject(x + xDirection, y + yDirection, averagetemp);
-                }
-            }
-        }
+        //for (int x = 0; x < mapData.getWidth(); ++x) {
+        //    for (int y = 0; y < mapData.getHeight(); ++y) {
+        //        for (int z = 1; z <= 8; ++z) {
+        //            int xDirection = 0, yDirection = 0;
+        //            if (z == 1 || z == 4 || z == 7) xDirection = -1;
+        //            else if (z == 3 || z == 6 || z == 9) xDirection = 1;
+
+        //            if (z == 1 || z == 2 || z == 3) yDirection = 1;
+        //            else if (z == 7 || z == 8 || z == 9) yDirection = -1;
+
+        //            //self heat is an average of neighbour
+        //            int averagetemp = (arrayHeat.getGridObject(x, y) + arrayHeat.getGridObject(x + xDirection, y + yDirection)) / 2;
+        //            arrayHeat.setGridObject(x, y, averagetemp);
+        //            arrayHeat.setGridObject(x + xDirection, y + yDirection, averagetemp);
+        //        }
+        //    }
+        //}
 
     }
 
@@ -242,7 +339,6 @@ public class TestGrid : MonoBehaviour
             }
         }
     }
-
     public void togglePathfinding()
     {
         if (renderLayer == 3) renderLayer = 0;
