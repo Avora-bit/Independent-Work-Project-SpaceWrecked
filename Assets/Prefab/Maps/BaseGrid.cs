@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class BaseGrid<GridType>
 {
-    private MapData mapData;                //reference to map size
+    public MapData mapData;                //reference to map size
     private GridType[,] gridArray;
 
     private bool bRebuild = false;          //if need rebuild

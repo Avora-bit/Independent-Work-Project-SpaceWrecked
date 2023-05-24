@@ -21,6 +21,8 @@ public class PlayerController : BaseSingleton<PlayerController>
     private Vector3 mousePos, screenPos;
     private Vector3 dragLMBstart, dragLMBend;
 
+    private NPClist NPC;
+
 
     private bool b_IsLMB = false, b_IsRMB = false, b_IsMMB = false;
 
@@ -28,6 +30,7 @@ public class PlayerController : BaseSingleton<PlayerController>
     {
         //assign reference to map size
         mapData = FindAnyObjectByType<MapData>();
+        NPC = transform.parent.parent.GetChild(3).GetComponent<NPClist>();
 
         testGrid = gameObject.transform.parent.parent.GetChild(1).GetComponent<TestGrid>();
         minPosX = mapData.getOriginPos().x;
@@ -65,7 +68,7 @@ public class PlayerController : BaseSingleton<PlayerController>
             else if (b_IsLMB && Input.GetMouseButton(0))       //LMB pressed, exclude first and last frame
             {
                 dragLMBend = screenPos;
-                testGrid.pathfindingGrid.getGridObject(mousePos).isWalkable = false;
+                testGrid.pathfindingGrid.getGridObject(mousePos).isWalkable = false; 
                 testGrid.pathfindingGrid.setRebuild(true);
             }
             else if (b_IsLMB && !Input.GetMouseButton(0))      //LMB up
@@ -83,7 +86,7 @@ public class PlayerController : BaseSingleton<PlayerController>
             if (!b_IsRMB && Input.GetMouseButton(1))           //RMB down
             {
                 b_IsRMB = true;
-
+                
                 //increments of 10
                 //int temp = Mathf.Clamp(testGrid.arrayHeat.getValue(mousePos) - 10, mapData.getMinTemp(), mapData.getMaxTemp());
                 //testGrid.arrayHeat.setGridObject(mousePos, temp);
@@ -109,19 +112,10 @@ public class PlayerController : BaseSingleton<PlayerController>
             }
             else if (b_IsMMB && Input.GetMouseButton(2))       //MMB pressed, exclude first and last frame
             {
-                PathNode startNode = testGrid.pathfindingGrid.getGridObject(0, 0);
+                PathNode startNode = testGrid.pathfindingGrid.getGridObject(NPC.transform.GetChild(0).position);
                 PathNode endNode = testGrid.pathfindingGrid.getGridObject(mousePos);
-
-                List<PathNode> path = testGrid.findPath(startNode, endNode);
-                if (path != null)
-                {
-                    for (int i = 0; i < path.Count - 1; i++)
-                    {
-                        Debug.DrawLine(testGrid.pathfindingGrid.getWorldPosCenter(path[i].x, path[i].y),
-                                       testGrid.pathfindingGrid.getWorldPosCenter(path[i + 1].x, path[i + 1].y),
-                                       Color.green);
-                    }
-                }
+                
+                NPC.transform.GetChild(0).GetComponent<BaseEntity>().setTargetPos(mousePos);
             }
             else if (b_IsMMB && !Input.GetMouseButton(2))      //MMB up
             {

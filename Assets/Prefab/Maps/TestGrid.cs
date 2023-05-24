@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting.Antlr3.Runtime.Collections;
 using UnityEditor;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class TestGrid : MonoBehaviour
@@ -31,9 +32,9 @@ public class TestGrid : MonoBehaviour
     private const int MOVE_DIAGONAL_COST = 14;              //sqrt of 10+10
 
     //null for now
-    public BaseGrid<GameObject> NPCArray = new BaseGrid<GameObject>();
     public BaseGrid<GameObject> structureArray = new BaseGrid<GameObject>();
     public BaseGrid<GameObject> floorArray = new BaseGrid<GameObject>();
+    public BaseGrid<GameObject> ceilingArray = new BaseGrid<GameObject>();
 
     void Awake()
     {
@@ -62,6 +63,27 @@ public class TestGrid : MonoBehaviour
 
         pathfindingGrid.generateGrid(mapData, (pathfindingGrid, x, y) => new PathNode(pathfindingGrid, x, y));             //prove that generics accept custom game objects
 
+    }
+
+    public List<Vector3> findVectorPath(Vector3 startPos, Vector3 endPos)
+    {
+        List<PathNode> path = findPath(pathfindingGrid.getGridObject(startPos), pathfindingGrid.getGridObject(endPos));
+        if (path != null)
+        {
+            List<Vector3> vectorPath = new List<Vector3>();
+            foreach (PathNode node in path)
+            {
+                vectorPath.Add(pathfindingGrid.getWorldPosCenter(node.x, node.y));
+                for (int i = 0; i < path.Count - 1; i++)
+                {
+                    Debug.DrawLine(pathfindingGrid.getWorldPosCenter(path[i].x, path[i].y),
+                                   pathfindingGrid.getWorldPosCenter(path[i + 1].x, path[i + 1].y),
+                                   Color.green);
+                }
+            }
+            return vectorPath;
+        }
+        return null;
     }
 
     public List<PathNode> findPath(PathNode startnode, PathNode endnode) {
