@@ -39,8 +39,8 @@ public class BaseGrid<GridType>
 
     public bool checkValid(int x, int y)
     {
-        return (x >= 0 && x < mapData.getWidth()) &&
-            (y >= 0 && y < mapData.getHeight());
+        return x >= 0 && x < mapData.getWidth() &&
+               y >= 0 && y < mapData.getHeight();
     }
 
     public Vector3 getWorldPos(int x, int y)
@@ -89,4 +89,5 @@ public class BaseGrid<GridType>
     }
     public bool getRebuild() { return bRebuild; }
     public void setRebuild(bool state) { bRebuild = state; }
+
 }

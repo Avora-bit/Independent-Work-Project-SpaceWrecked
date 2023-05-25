@@ -9,7 +9,10 @@ public class PathNode {
     public int costG, costH, costF;
     private PathNode prevNode;
 
+    public int costPenalty;                    //positive is bad, negative values is good
+
     public bool isWalkable = true;
+    public int accessLayer = 1;                 //1-7
 
     public PathNode(BaseGrid<PathNode> grid, int x, int y) {
         this.grid = grid;
@@ -22,7 +25,6 @@ public class PathNode {
     public void setPrevNode(PathNode node) { prevNode = node; }
     public PathNode getPrevNode() { return prevNode; }
 
-    public void calculateCostF() {
-        costF = costG + costH;
-    }
+    public void calculateCostF() { costF = costG + costH; }
+
 }

@@ -9,6 +9,10 @@ public class BaseEntity : MonoBehaviour
     // This is the base Entity class for a moving NPC. 
 
     TestGrid mapinstance;
+        //get reference to map
+        //get walkspeed data
+        //change walkspeed
+
     //pathfinding stuff
     List<Vector3> pathVectorList;
     int currentPathIndex = 0;

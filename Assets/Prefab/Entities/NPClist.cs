@@ -14,7 +14,10 @@ public class NPClist : MonoBehaviour
         mapData = FindObjectOfType<MapData>();
         testGrid = transform.parent.GetChild(1).gameObject.GetComponent<TestGrid>();
 
-
+        //for (int i = 0; i<100; i++)
+        //{
+        //    spawnEntity(prefabHuman);
+        //}
         spawnEntity(prefabHuman);
     }
 
@@ -26,8 +29,8 @@ public class NPClist : MonoBehaviour
     public void spawnEntity(GameObject prefab)
     {
         GameObject entity = Instantiate(prefab, transform);
-        int xPos = Random.Range(0, mapData.getWidth() + (int)mapData.getOriginPos().x);
-        int yPos = Random.Range(0, mapData.getHeight() + (int)mapData.getOriginPos().y);
+        int xPos = Random.Range(-mapData.getWidth()/2, mapData.getWidth()/2);
+        int yPos = Random.Range(-mapData.getHeight()/2, mapData.getHeight()/2);
         entity.transform.position = new Vector3(xPos, yPos, 0);
         entity.GetComponent<BaseEntity>().setMapInstance(testGrid);
     }

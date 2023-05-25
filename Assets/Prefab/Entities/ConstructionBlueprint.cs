@@ -26,7 +26,7 @@ public class ConstructionBlueprint : MonoBehaviour
         //get prefab values
         
         //material
-        //
+        
     }
 
     // Update is called once per frame
