@@ -14,6 +14,7 @@ public class TestGrid : MonoBehaviour
     //this allows for the grid to reuse code and reduce update
 
     private MapData mapData;                //reference to map data
+    TimeController timeController;          //reference to time
 
     private TextMesh[,] debugTextArray;
     private Mesh mesh;
@@ -41,6 +42,7 @@ public class TestGrid : MonoBehaviour
     void Awake()
     {
         mapData = FindObjectOfType<MapData>();
+        timeController = FindObjectOfType<TimeController>();
 
         //create debug text on grid
         debugTextArray = new TextMesh[mapData.getWidth(), mapData.getHeight()];
@@ -62,7 +64,6 @@ public class TestGrid : MonoBehaviour
 
         //create grids with data type
         arrayHeat.generateGrid(mapData, (arrayHeat, x, y) => 0);
-
         pathfindingGrid.generateGrid(mapData, (pathfindingGrid, x, y) => new PathNode(pathfindingGrid, x, y));             //prove that generics accept custom game objects
     }
 
@@ -181,20 +182,20 @@ public class TestGrid : MonoBehaviour
     void Update()
     {
         //diffuse heat
-        diffuseHeat();
+        if (Time.timeScale > 0) diffuseHeat();
 
         //only rebuild mesh if both render and rebuild is true
         switch (renderLayer) {
             case 1:
                 //heat visual
                 if (arrayHeat.getRebuild()) {
-                    for (int x = 0; x < mapData.getWidth(); ++x)
-                    {
-                        for (int y = 0; y < mapData.getHeight(); ++y)
-                        {
-                            debugTextArray[x, y].text = ((int)arrayHeat.getGridObject(x, y)).ToString();
-                        }
-                    }
+                    //for (int x = 0; x < mapData.getWidth(); ++x)
+                    //{
+                    //    for (int y = 0; y < mapData.getHeight(); ++y)
+                    //    {
+                    //        debugTextArray[x, y].text = ((int)arrayHeat.getGridObject(x, y)).ToString();
+                    //    }
+                    //}
                     updateMeshVisual(arrayHeat);
                     arrayHeat.setRebuild(false);
                 }
@@ -397,8 +398,8 @@ public class TestGrid : MonoBehaviour
                                     heatUpdate = true;
                                     //assumes heat distribution of 2%
                                     diffTemp /= 50;
-                                    selfTemp -= diffTemp;
-                                    neighbourTemp += diffTemp;
+                                    selfTemp -= diffTemp * Time.timeScale;
+                                    neighbourTemp += diffTemp * Time.timeScale;
                                     arrayHeat.setGridObject(x + nX, y + nY, neighbourTemp);
                                     arrayHeat.setGridObject(x, y, selfTemp);
                                 }
@@ -417,13 +418,13 @@ public class TestGrid : MonoBehaviour
         {
             meshRenderer.enabled = false;
             renderLayer = 0;
-            for (int x = 0; x < mapData.getWidth(); ++x)
-            {
-                for (int y = 0; y < mapData.getHeight(); ++y)
-                {
-                    debugTextArray[x, y].gameObject.SetActive(false);
-                }
-            }
+            //for (int x = 0; x < mapData.getWidth(); ++x)
+            //{
+            //    for (int y = 0; y < mapData.getHeight(); ++y)
+            //    {
+            //        debugTextArray[x, y].gameObject.SetActive(false);
+            //    }
+            //}
         }
         else
         {
@@ -431,14 +432,14 @@ public class TestGrid : MonoBehaviour
             meshRenderer.material = tempMaterials[0];
             updateMeshVisual(arrayHeat);
             renderLayer = 1;
-            for (int x = 0; x < mapData.getWidth(); ++x)
-            {
-                for (int y = 0; y < mapData.getHeight(); ++y)
-                {
-                    debugTextArray[x, y].gameObject.SetActive(true);
-                    debugTextArray[x, y].text = ((int)arrayHeat.getGridObject(x, y)).ToString();
-                }
-            }
+            //for (int x = 0; x < mapData.getWidth(); ++x)
+            //{
+            //    for (int y = 0; y < mapData.getHeight(); ++y)
+            //    {
+            //        debugTextArray[x, y].gameObject.SetActive(true);
+            //        debugTextArray[x, y].text = ((int)arrayHeat.getGridObject(x, y)).ToString();
+            //    }
+            //}
         }
     }
     public void toggleAccess()
