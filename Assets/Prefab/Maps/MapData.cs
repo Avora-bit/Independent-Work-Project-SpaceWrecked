@@ -8,7 +8,6 @@ public class MapData : MonoBehaviour
     [SerializeField] private int width = 128, height = 128;
     [SerializeField] private float cellSize = 1f;
     [SerializeField] private int minTemp = -300, maxTemp = 1000;
-    [SerializeField] private int minComfortableTemp = 10, maxComfortableTemp = 50;
     private Vector3 originPos;
     public enum overlay_Layers
     {
@@ -31,8 +30,4 @@ public class MapData : MonoBehaviour
 
     public int getMinTemp() { return minTemp; }
     public int getMaxTemp() { return maxTemp; }
-    public int getMinComTemp() { return minComfortableTemp; }
-    public int getMaxComTemp() { return maxComfortableTemp; }
-
-
 }

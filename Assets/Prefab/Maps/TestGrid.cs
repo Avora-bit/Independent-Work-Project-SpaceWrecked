@@ -24,8 +24,11 @@ public class TestGrid : MonoBehaviour
     [SerializeField] private Material[] tempMaterials;
 
 
-    public BaseGrid<double> arrayHeat = new BaseGrid<double>();               //get heat data
+    public BaseGrid<double> arrayHeat = new BaseGrid<double>();
     public bool heatUpdate = false;
+
+    public BaseGrid<double> arrayRadiation = new BaseGrid<double>();
+    public bool radiationUpdate = false;
 
     public BaseGrid<PathNode> pathfindingGrid = new BaseGrid<PathNode>();
     //stores data for access levels, walkability and weighted paths
@@ -182,7 +185,12 @@ public class TestGrid : MonoBehaviour
     void Update()
     {
         //diffuse heat
-        if (Time.timeScale > 0) diffuseHeat();
+        if (Time.timeScale > 0 && heatUpdate) {
+            heatUpdate = diffuse(arrayHeat);
+        }
+        if (Time.timeScale > 0 && radiationUpdate) {
+            radiationUpdate = diffuse(arrayRadiation);
+        }
 
         //only rebuild mesh if both render and rebuild is true
         switch (renderLayer) {
@@ -210,6 +218,19 @@ public class TestGrid : MonoBehaviour
                     //}
                     updateMeshVisual(pathfindingGrid);
                     pathfindingGrid.setRebuild(false);
+                }
+                break;
+            case 3:
+                //radiation visual
+                if (arrayRadiation.getRebuild())
+                {                             //hardcoded
+                    //for (int x = 0; x < mapData.getWidth(); ++x) {
+                    //    for (int y = 0; y < mapData.getHeight(); ++y) {
+                    //        debugTextArray[x, y].text = pathfindingGrid.getGridObject(x, y).ToString();
+                    //    }
+                    //}
+                    updateMeshVisual(arrayRadiation);
+                    arrayRadiation.setRebuild(false);
                 }
                 break;
             default:
@@ -374,42 +395,44 @@ public class TestGrid : MonoBehaviour
 
     }
 
-    private void diffuseHeat()
+    private bool diffuse(BaseGrid<double> arrayType)
     {
-        if (heatUpdate || arrayHeat.getRebuild())
+        bool updated = false;
+        if (arrayType.getRebuild())
         {
-            heatUpdate = false;
             for (int x = 0; x < mapData.getWidth(); ++x)
             {
                 for (int y = 0; y < mapData.getHeight(); ++y)
                 {
-                    double selfTemp = arrayHeat.getGridObject(x, y);
+                    double self = arrayType.getGridObject(x, y);
                     for (int nX = -1; nX <= 1; ++nX)
                     {
                         for (int nY = -1; nY <= 1; ++nY)
                         {
-                            if (arrayHeat.checkValid(x + nX, y + nY))
+                            if (arrayType.checkValid(x + nX, y + nY))
                             {           //ensure that the node is a neighbour and not on edge
                                 if (x == 0 && y == 0) continue;                                         //ensure node is not itself
-                                double neighbourTemp = arrayHeat.getGridObject(x + nX, y + nY);
-                                double diffTemp = selfTemp - neighbourTemp;
-                                if (diffTemp > 1)
+                                double neighbour = arrayType.getGridObject(x + nX, y + nY);
+                                double diff = self - neighbour;
+                                if (diff > 0.5)
                                 {
-                                    heatUpdate = true;
-                                    //assumes heat distribution of 2%
-                                    diffTemp /= 50;
-                                    selfTemp -= diffTemp * Time.timeScale;
-                                    neighbourTemp += diffTemp * Time.timeScale;
-                                    arrayHeat.setGridObject(x + nX, y + nY, neighbourTemp);
-                                    arrayHeat.setGridObject(x, y, selfTemp);
+                                    updated = true;
+                                    //assumes distribution of 2%                                        //get insulation values afterwards
+                                    diff /= 50;
+                                    self -= diff * Time.timeScale;
+                                    neighbour += diff * Time.timeScale;
+                                    arrayType.setGridObject(x + nX, y + nY, neighbour);
+                                    arrayType.setGridObject(x, y, self);
                                 }
                             }
                         }
                     }
                 }
             }
-            arrayHeat.setRebuild(true);
+            arrayType.setRebuild(true);
         }
+
+        return updated;
     }
 
     public void toggleHeat()
@@ -462,6 +485,36 @@ public class TestGrid : MonoBehaviour
             meshRenderer.material = tempMaterials[1];
             updateMeshVisual(pathfindingGrid);                                  //requires update
             renderLayer = 2;
+            //for (int x = 0; x < mapData.getWidth(); ++x)
+            //{
+            //    for (int y = 0; y < mapData.getHeight(); ++y)
+            //    {
+            //        debugTextArray[x, y].gameObject.SetActive(false);
+            //        debugTextArray[x, y].text = pathfindingGrid.getGridObject(x, y).ToString();
+            //    }
+            //}
+        }
+    }
+    public void toggleRadiation()
+    {
+        if (renderLayer == 3)
+        {
+            meshRenderer.enabled = false;
+            renderLayer = 0;
+            //for (int x = 0; x < mapData.getWidth(); ++x)
+            //{
+            //    for (int y = 0; y < mapData.getHeight(); ++y)
+            //    {
+            //        debugTextArray[x, y].gameObject.SetActive(false);
+            //    }
+            //}
+        }
+        else
+        {
+            meshRenderer.enabled = true;
+            meshRenderer.material = tempMaterials[2];
+            updateMeshVisual(pathfindingGrid);                                  //requires update
+            renderLayer = 3;
             //for (int x = 0; x < mapData.getWidth(); ++x)
             //{
             //    for (int y = 0; y < mapData.getHeight(); ++y)

@@ -49,6 +49,9 @@ MonoBehaviour:
   tempMaterials:
   - {fileID: 2100000, guid: eea1dde63e81749498eb3f03b805dc07, type: 2}
   - {fileID: 2100000, guid: c0ebfbef291f7134da60b271e332a37e, type: 2}
+  - {fileID: 2100000, guid: 350f71dc17d7cb444a7db0269d965997, type: 2}
+  heatUpdate: 0
+  radiationUpdate: 0
 --- !u!33 &1155055491805351176
 MeshFilter:
   m_ObjectHideFlags: 0

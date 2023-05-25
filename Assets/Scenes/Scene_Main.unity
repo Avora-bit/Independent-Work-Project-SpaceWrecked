@@ -481,11 +481,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 7925703602855847690, guid: aad5ee9def27734428899297d292eaea, type: 3}
       propertyPath: width
-      value: 64
+      value: 128
       objectReference: {fileID: 0}
     - target: {fileID: 7925703602855847690, guid: aad5ee9def27734428899297d292eaea, type: 3}
       propertyPath: height
-      value: 64
+      value: 128
       objectReference: {fileID: 0}
     - target: {fileID: 7946825544507465534, guid: aad5ee9def27734428899297d292eaea, type: 3}
       propertyPath: timeText
