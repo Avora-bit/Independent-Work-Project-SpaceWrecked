@@ -1,8 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class NPClist : MonoBehaviour
+public class NPCController : MonoBehaviour
 {
     MapData mapData;
     TestGrid testGrid;

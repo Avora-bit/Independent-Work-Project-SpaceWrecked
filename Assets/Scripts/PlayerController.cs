@@ -1,9 +1,5 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 public class PlayerController : BaseSingleton<PlayerController>
 {
@@ -21,7 +17,7 @@ public class PlayerController : BaseSingleton<PlayerController>
     private Vector3 mousePos, screenPos;
     private Vector3 dragLMBstart, dragLMBend;
 
-    private NPClist NPC;
+    private NPCController NPC;
 
 
     private bool b_IsLMB = false, b_IsRMB = false, b_IsMMB = false;
@@ -30,7 +26,7 @@ public class PlayerController : BaseSingleton<PlayerController>
     {
         //assign reference to map size
         mapData = FindAnyObjectByType<MapData>();
-        NPC = transform.parent.parent.GetChild(3).GetComponent<NPClist>();
+        NPC = transform.parent.parent.GetChild(3).GetComponent<NPCController>();
 
         testGrid = gameObject.transform.parent.parent.GetChild(1).GetComponent<TestGrid>();
         minPosX = mapData.getOriginPos().x;
@@ -57,79 +53,83 @@ public class PlayerController : BaseSingleton<PlayerController>
             screenPos.z -= Camera.main.transform.position.z;
             mousePos = Camera.main.ScreenToWorldPoint(screenPos);
 
-            if (!b_IsLMB && Input.GetMouseButton(0))           //LMB down
+            //check if click on UI
+            if (!EventSystem.current.IsPointerOverGameObject())
             {
-                b_IsLMB = true;
-                dragLMBstart = screenPos;
-            }
-            else if (b_IsLMB && Input.GetMouseButton(0))       //LMB pressed, exclude first and last frame
-            {
-                dragLMBend = screenPos;
-                //testGrid.pathfindingGrid.getGridObject(mousePos).isWalkable = false; 
-                //testGrid.pathfindingGrid.setRebuild(true);
+                if (!b_IsLMB && Input.GetMouseButton(0))           //LMB down
+                {
+                    b_IsLMB = true;
+                    dragLMBstart = screenPos;
+                }
+                else if (b_IsLMB && Input.GetMouseButton(0))       //LMB pressed, exclude first and last frame
+                {
+                    dragLMBend = screenPos;
+                    //testGrid.pathfindingGrid.getGridObject(mousePos).isWalkable = false; 
+                    //testGrid.pathfindingGrid.setRebuild(true);
 
-                //increments
-                double temp = Mathf.Clamp((float)testGrid.arrayHeat.getGridObject(mousePos) + 100, mapData.getMinTemp(), mapData.getMaxTemp());
-                testGrid.arrayHeat.setGridObject(mousePos, temp);
-            }
-            else if (b_IsLMB && !Input.GetMouseButton(0))      //LMB up
-            {
-                b_IsLMB = false;
-                //based on start and end, do smth
+                    //increments
+                    double temp = Mathf.Clamp((float)testGrid.arrayHeat.getGridObject(mousePos) + 100, mapData.getMinTemp(), mapData.getMaxTemp());
+                    testGrid.arrayHeat.setGridObject(mousePos, temp);
+                }
+                else if (b_IsLMB && !Input.GetMouseButton(0))      //LMB up
+                {
+                    b_IsLMB = false;
+                    //based on start and end, do smth
 
-                dragLMBstart = dragLMBend = new Vector3(0, 0, 0);   //reset the position
-            }
-            else
-            {
-                //null
-            }
+                    dragLMBstart = dragLMBend = new Vector3(0, 0, 0);   //reset the position
+                }
+                else
+                {
+                    //null
+                }
 
-            if (!b_IsRMB && Input.GetMouseButton(1))           //RMB down
-            {
-                b_IsRMB = true;
+                if (!b_IsRMB && Input.GetMouseButton(1))           //RMB down
+                {
+                    b_IsRMB = true;
 
-            }
-            else if (b_IsRMB && Input.GetMouseButton(1))       //RMB pressed, exclude first and last frame
-            {
-                //testGrid.pathfindingGrid.getGridObject(mousePos).isWalkable = true;
-                //testGrid.pathfindingGrid.setRebuild(true);
+                }
+                else if (b_IsRMB && Input.GetMouseButton(1))       //RMB pressed, exclude first and last frame
+                {
+                    //testGrid.pathfindingGrid.getGridObject(mousePos).isWalkable = true;
+                    //testGrid.pathfindingGrid.setRebuild(true);
 
-                double temp = Mathf.Clamp((float)testGrid.arrayHeat.getGridObject(mousePos) - 100, mapData.getMinTemp(), mapData.getMaxTemp());
-                testGrid.arrayHeat.setGridObject(mousePos, temp);
-            }
-            else if (b_IsRMB && !Input.GetMouseButton(1))      //RMB up
-            {
-                b_IsRMB = false;
-            }
-            else
-            {
-                //null
-            }
+                    double temp = Mathf.Clamp((float)testGrid.arrayHeat.getGridObject(mousePos) - 100, mapData.getMinTemp(), mapData.getMaxTemp());
+                    testGrid.arrayHeat.setGridObject(mousePos, temp);
+                }
+                else if (b_IsRMB && !Input.GetMouseButton(1))      //RMB up
+                {
+                    b_IsRMB = false;
+                }
+                else
+                {
+                    //null
+                }
 
-            if (!b_IsMMB && Input.GetMouseButton(2))           //MMB down
-            {
-                b_IsMMB = true;
-            }
-            else if (b_IsMMB && Input.GetMouseButton(2))       //MMB pressed, exclude first and last frame
-            {
-                //PathNode startNode = testGrid.pathfindingGrid.getGridObject(NPC.transform.GetChild(0).position);
-                //PathNode endNode = testGrid.pathfindingGrid.getGridObject(mousePos);
-                
-                //NPC.transform.GetChild(0).GetComponent<BaseEntity>().setTargetPos(mousePos);
+                if (!b_IsMMB && Input.GetMouseButton(2))           //MMB down
+                {
+                    b_IsMMB = true;
+                }
+                else if (b_IsMMB && Input.GetMouseButton(2))       //MMB pressed, exclude first and last frame
+                {
+                    //PathNode startNode = testGrid.pathfindingGrid.getGridObject(NPC.transform.GetChild(0).position);
+                    //PathNode endNode = testGrid.pathfindingGrid.getGridObject(mousePos);
 
-                //BaseEntity[] allChildren = NPC.transform.GetComponentsInChildren<BaseEntity>();
-                //foreach (BaseEntity child in allChildren)
-                //{
-                //    child.setTargetPos(mousePos);
-                //}
-            }
-            else if (b_IsMMB && !Input.GetMouseButton(2))      //MMB up
-            {
-                b_IsMMB = false;
-            }
-            else
-            {
-                //null
+                    //NPC.transform.GetChild(0).GetComponent<BaseEntity>().setTargetPos(mousePos);
+
+                    //BaseEntity[] allChildren = NPC.transform.GetComponentsInChildren<BaseEntity>();
+                    //foreach (BaseEntity child in allChildren)
+                    //{
+                    //    child.setTargetPos(mousePos);
+                    //}
+                }
+                else if (b_IsMMB && !Input.GetMouseButton(2))      //MMB up
+                {
+                    b_IsMMB = false;
+                }
+                else
+                {
+                    //null
+                }
             }
         }
 

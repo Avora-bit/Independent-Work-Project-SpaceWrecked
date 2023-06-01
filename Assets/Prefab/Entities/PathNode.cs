@@ -12,7 +12,7 @@ public class PathNode {
     public int costPenalty;                    //positive is bad, negative values is good
 
     public bool isWalkable = true;
-    public int accessLayer = 1;                 //1-7
+    public int accessLayer = 1;
 
     public PathNode(BaseGrid<PathNode> grid, int x, int y) {
         this.grid = grid;

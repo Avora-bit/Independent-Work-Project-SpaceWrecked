@@ -1,10 +1,4 @@
-using Mono.Cecil;
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting.Antlr3.Runtime.Collections;
-using UnityEditor;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class TestGrid : MonoBehaviour
@@ -25,10 +19,7 @@ public class TestGrid : MonoBehaviour
 
 
     public BaseGrid<double> arrayHeat = new BaseGrid<double>();
-    public bool heatUpdate = false;
-
     public BaseGrid<double> arrayRadiation = new BaseGrid<double>();
-    public bool radiationUpdate = false;
 
     public BaseGrid<PathNode> pathfindingGrid = new BaseGrid<PathNode>();
     //stores data for access levels, walkability and weighted paths
@@ -48,17 +39,17 @@ public class TestGrid : MonoBehaviour
         timeController = FindObjectOfType<TimeController>();
 
         //create debug text on grid
-        debugTextArray = new TextMesh[mapData.getWidth(), mapData.getHeight()];
-        for (int x = 0; x < mapData.getWidth(); ++x)
-        {
-            for (int y = 0; y < mapData.getHeight(); ++y)
-            {
-                debugTextArray[x, y] = createWorldText("0", gameObject.transform, mapData.getOriginPos() +
-                    new Vector3(mapData.getCellSize() * x, mapData.getCellSize() * y, 0) +
-                    new Vector3(mapData.getCellSize() / 2, mapData.getCellSize() / 2, 0));
-                debugTextArray[x, y].gameObject.SetActive(false);
-            }
-        }
+        //debugTextArray = new TextMesh[mapData.getWidth(), mapData.getHeight()];
+        //for (int x = 0; x < mapData.getWidth(); ++x)
+        //{
+        //    for (int y = 0; y < mapData.getHeight(); ++y)
+        //    {
+        //        debugTextArray[x, y] = createWorldText("0", gameObject.transform, mapData.getOriginPos() +
+        //            new Vector3(mapData.getCellSize() * x, mapData.getCellSize() * y, 0) +
+        //            new Vector3(mapData.getCellSize() / 2, mapData.getCellSize() / 2, 0));
+        //        debugTextArray[x, y].gameObject.SetActive(false);
+        //    }
+        //}
 
         //create visual overlay mesh
         meshRenderer = GetComponent<MeshRenderer>();
@@ -67,6 +58,7 @@ public class TestGrid : MonoBehaviour
 
         //create grids with data type
         arrayHeat.generateGrid(mapData, (arrayHeat, x, y) => 0);
+        arrayRadiation.generateGrid(mapData, (arrayHeat, x, y) => 0);
         pathfindingGrid.generateGrid(mapData, (pathfindingGrid, x, y) => new PathNode(pathfindingGrid, x, y));             //prove that generics accept custom game objects
     }
 
@@ -185,11 +177,11 @@ public class TestGrid : MonoBehaviour
     void Update()
     {
         //diffuse heat
-        if (Time.timeScale > 0 && heatUpdate) {
-            heatUpdate = diffuse(arrayHeat);
+        if (Time.timeScale > 0 && arrayHeat.getRebuild()) {
+            arrayHeat.setRebuild(diffuse(arrayHeat));
         }
-        if (Time.timeScale > 0 && radiationUpdate) {
-            radiationUpdate = diffuse(arrayRadiation);
+        if (Time.timeScale > 0 && arrayRadiation.getRebuild()) {
+            arrayRadiation.setRebuild(diffuse(arrayRadiation));
         }
 
         //only rebuild mesh if both render and rebuild is true
@@ -205,7 +197,7 @@ public class TestGrid : MonoBehaviour
                     //    }
                     //}
                     updateMeshVisual(arrayHeat);
-                    arrayHeat.setRebuild(false);
+                    //arrayHeat.setRebuild(false);
                 }
                 break;
             case 2:
@@ -226,11 +218,11 @@ public class TestGrid : MonoBehaviour
                 {                             //hardcoded
                     //for (int x = 0; x < mapData.getWidth(); ++x) {
                     //    for (int y = 0; y < mapData.getHeight(); ++y) {
-                    //        debugTextArray[x, y].text = pathfindingGrid.getGridObject(x, y).ToString();
+                    //        debugTextArray[x, y].text = arrayRadiation.getGridObject(x, y).ToString();
                     //    }
                     //}
                     updateMeshVisual(arrayRadiation);
-                    arrayRadiation.setRebuild(false);
+                    //arrayRadiation.setRebuild(false);
                 }
                 break;
             default:
@@ -392,46 +384,67 @@ public class TestGrid : MonoBehaviour
 
     public void floodrandom()
     {
+        //theoritical usage of breadth first search, A* for searching
+        //https://www.geeksforgeeks.org/flood-fill-algorithm/ 
+        //create a list and a hash set for the values
 
+        int tileCount = 0;
+        int totalTileCount = mapData.getWidth() * mapData.getHeight();
+
+        int setRandAccess = 0;
+        //set all walls to 0, add the rest into the open list
+
+        while (true)
+        {
+            setRandAccess++;
+            //choose a random point to start
+            while (true)            //condition
+            {
+                //loop and add
+
+                //flood fill from point 1
+
+                tileCount++;
+            }
+
+            if (tileCount >= totalTileCount) break;             //only exit when the number of accesses, or assignment is more than the total number of cells
+        }
+        //do stuff here
     }
 
     private bool diffuse(BaseGrid<double> arrayType)
     {
         bool updated = false;
-        if (arrayType.getRebuild())
+
+        for (int x = 0; x < mapData.getWidth(); ++x)
         {
-            for (int x = 0; x < mapData.getWidth(); ++x)
+            for (int y = 0; y < mapData.getHeight(); ++y)
             {
-                for (int y = 0; y < mapData.getHeight(); ++y)
+                double self = arrayType.getGridObject(x, y);
+                for (int nX = -1; nX <= 1; ++nX)
                 {
-                    double self = arrayType.getGridObject(x, y);
-                    for (int nX = -1; nX <= 1; ++nX)
+                    for (int nY = -1; nY <= 1; ++nY)
                     {
-                        for (int nY = -1; nY <= 1; ++nY)
-                        {
-                            if (arrayType.checkValid(x + nX, y + nY))
-                            {           //ensure that the node is a neighbour and not on edge
-                                if (x == 0 && y == 0) continue;                                         //ensure node is not itself
-                                double neighbour = arrayType.getGridObject(x + nX, y + nY);
-                                double diff = self - neighbour;
-                                if (diff > 0.5)
-                                {
-                                    updated = true;
-                                    //assumes distribution of 2%                                        //get insulation values afterwards
-                                    diff /= 50;
-                                    self -= diff * Time.timeScale;
-                                    neighbour += diff * Time.timeScale;
-                                    arrayType.setGridObject(x + nX, y + nY, neighbour);
-                                    arrayType.setGridObject(x, y, self);
-                                }
+                        if (arrayType.checkValid(x + nX, y + nY))
+                        {           //ensure that the node is a neighbour and not on edge
+                            if (x == 0 && y == 0) continue;                                         //ensure node is not itself
+                            double neighbour = arrayType.getGridObject(x + nX, y + nY);
+                            double diff = self - neighbour;
+                            if (diff > 0.5)
+                            {
+                                updated = true;
+                                //assumes distribution of 2%                                        //get insulation values afterwards
+                                diff /= 50;
+                                self -= diff * Time.timeScale;
+                                neighbour += diff * Time.timeScale;
+                                arrayType.setGridObject(x + nX, y + nY, neighbour);
+                                arrayType.setGridObject(x, y, self);
                             }
                         }
                     }
                 }
             }
-            arrayType.setRebuild(true);
         }
-
         return updated;
     }
 

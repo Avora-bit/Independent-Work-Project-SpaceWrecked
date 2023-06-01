@@ -31,7 +31,7 @@ Transform:
   - {fileID: 8018264526468762142}
   - {fileID: 984426104797274491}
   - {fileID: 6436580292990381661}
-  - {fileID: 7920216793082984682}
+  - {fileID: 4898288247327979699}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -241,7 +241,7 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4652000009749162960, guid: b4b6cd49b9fda5141aed4685f3f156c4, type: 3}
   m_PrefabInstance: {fileID: 5559230910289037995}
   m_PrefabAsset: {fileID: 0}
---- !u!1001 &8696649343311405289
+--- !u!1001 &6242200742183755952
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -294,12 +294,12 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8145238176181596568, guid: 89aedc9e777a669438ff4087bf08a412, type: 3}
       propertyPath: m_Name
-      value: NPC list
+      value: NPC Controller
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 89aedc9e777a669438ff4087bf08a412, type: 3}
---- !u!4 &7920216793082984682 stripped
+--- !u!4 &4898288247327979699 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1538814583555135491, guid: 89aedc9e777a669438ff4087bf08a412, type: 3}
-  m_PrefabInstance: {fileID: 8696649343311405289}
+  m_PrefabInstance: {fileID: 6242200742183755952}
   m_PrefabAsset: {fileID: 0}

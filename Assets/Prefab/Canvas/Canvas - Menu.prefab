@@ -118,7 +118,7 @@ MonoBehaviour:
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 984181619333930911}
+  m_TargetGraphic: {fileID: 4298051892051310838}
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
@@ -209,7 +209,7 @@ GameObject:
   - component: {fileID: 704748560537890483}
   - component: {fileID: 704748560537890480}
   - component: {fileID: 704748560537890481}
-  - component: {fileID: 704748560537890446}
+  - component: {fileID: 5277801668830153713}
   m_Layer: 5
   m_Name: Canvas - Menu
   m_TagString: Untagged
@@ -284,7 +284,7 @@ MonoBehaviour:
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
   m_PresetInfoIsWorld: 0
---- !u!114 &704748560537890446
+--- !u!114 &5277801668830153713
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -473,7 +473,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.75}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: -0.000061035156, y: -0.000061035156}
   m_SizeDelta: {x: -10, y: -10}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2949734267982584441
@@ -676,7 +676,7 @@ MonoBehaviour:
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 984181619333930911}
+  m_TargetGraphic: {fileID: 876063388165859779}
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
@@ -838,7 +838,7 @@ MonoBehaviour:
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 984181619333930911}
+  m_TargetGraphic: {fileID: 985630811535440388}
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
