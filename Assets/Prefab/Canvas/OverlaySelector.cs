@@ -7,7 +7,7 @@ public class OverlaySelector : MonoBehaviour
 
     void Awake()
     {
-        TestGrid testGrid = FindObjectOfType<TestGrid>();
+        MasterGrid testGrid = FindObjectOfType<MasterGrid>();
 
         btn_Heat = gameObject.transform.Find("Btn_Temp").GetComponent<Button>();
         btn_Heat.onClick.AddListener(testGrid.toggleHeat);

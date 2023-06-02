@@ -5,7 +5,7 @@ public class BaseEntity : MonoBehaviour
 {
     // This is the base Entity class for a moving NPC. 
 
-    TestGrid mapinstance;
+    MasterGrid mapinstance;
         //get reference to map
         //get walkspeed data
         //change walkspeed
@@ -133,7 +133,7 @@ public class BaseEntity : MonoBehaviour
     }
 
 
-    public void setMapInstance(TestGrid instance)
+    public void setMapInstance(MasterGrid instance)
     {
         mapinstance = instance;
     }
@@ -170,6 +170,9 @@ public class BaseEntity : MonoBehaviour
     private void stopMoving()
     {
         pathVectorList = null;
+        //pick up item
+
+        interact();
     }
 
     // Update is called once per frame
@@ -191,5 +194,15 @@ public class BaseEntity : MonoBehaviour
         handleMovement();
         //do task
 
+    }
+
+    private void interact()
+    {
+        //check what is on the position
+        //get position, then ask all layers to do stuff
+
+        //if item, then pickup
+
+        //if machine then interact
     }
 }

@@ -15,7 +15,7 @@ public class PathNode {
     public int accessLayer = 1;
 
     public PathNode(BaseGrid<PathNode> grid, int x, int y) {
-        this.grid = grid;
+        this.grid = grid;                   //should not have a specific use case as of yet
         this.x = x;
         this.y = y;
     }

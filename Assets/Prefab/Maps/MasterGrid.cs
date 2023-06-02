@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class TestGrid : MonoBehaviour
+public class MasterGrid : MonoBehaviour
 {
     //overarching manager for the grid system in the map
     //test grid stores all the interacting grids and updates them
@@ -27,6 +27,8 @@ public class TestGrid : MonoBehaviour
     private HashSet<PathNode> closedList;           //generic hashset to check if it contains neighbour
     private const int MOVE_STRAIGHT_COST = 10;
     private const int MOVE_DIAGONAL_COST = 14;              //sqrt of 10+10
+
+    public BaseGrid<ItemStat> inventoryArray = new BaseGrid<ItemStat>();
 
     //able to store prefabs as well as construction blueprints
     public BaseGrid<GameObject> structureArray = new BaseGrid<GameObject>();
@@ -60,6 +62,7 @@ public class TestGrid : MonoBehaviour
         arrayHeat.generateGrid(mapData, (arrayHeat, x, y) => 0);
         arrayRadiation.generateGrid(mapData, (arrayHeat, x, y) => 0);
         pathfindingGrid.generateGrid(mapData, (pathfindingGrid, x, y) => new PathNode(pathfindingGrid, x, y));             //prove that generics accept custom game objects
+        inventoryArray.generateGrid(mapData, (inventoryArray, x, y) => null);
     }
 
     public List<Vector3> findVectorPath(Vector3 startPos, Vector3 endPos)
@@ -82,7 +85,8 @@ public class TestGrid : MonoBehaviour
         }
         return null;
     }
-    public List<PathNode> findPath(PathNode startnode, PathNode endnode) {
+    public List<PathNode> findPath(PathNode startnode, PathNode endnode)
+    {
         if (startnode == null || endnode == null || !endnode.isWalkable) return null;
         //prevents if location nodes are outside the map, or if the end node is solid
         //add another check for access array
@@ -91,8 +95,10 @@ public class TestGrid : MonoBehaviour
         closedList = new HashSet<PathNode>();
 
         //cycle through all nodes and set values
-        for (int x = 0; x < mapData.getWidth(); x++) {
-            for (int y = 0; y < mapData.getHeight(); y++) {
+        for (int x = 0; x < mapData.getWidth(); x++)
+        {
+            for (int y = 0; y < mapData.getHeight(); y++)
+            {
                 PathNode node = pathfindingGrid.getGridObject(x, y);
                 node.costG = int.MaxValue;          //set to infinite value
                 node.calculateCostF();
@@ -103,12 +109,14 @@ public class TestGrid : MonoBehaviour
         startnode.costG = 0;        //starting node, cost = 0
         startnode.costH = calculateDistanceCost(startnode, endnode);
 
-        while (openList.Count > 0) {
+        while (openList.Count > 0)
+        {
             PathNode currNode = getLowestFCostNode(openList);
             if (currNode == endnode) return calculatePath(endnode);
             openList.Remove(currNode); closedList.Add(currNode);
 
-            foreach (PathNode neighbourNode in getNeighbours(currNode)) {
+            foreach (PathNode neighbourNode in getNeighbours(currNode))
+            {
                 if (closedList.Contains(neighbourNode)) continue;
                 if (!neighbourNode.isWalkable) { closedList.Add(neighbourNode); continue; }
                 //diagonal movement check;
@@ -121,7 +129,8 @@ public class TestGrid : MonoBehaviour
                 }
 
                 int tempCostG = currNode.costG + calculateDistanceCost(currNode, neighbourNode) + neighbourNode.costPenalty;
-                if (tempCostG < neighbourNode.costG) {
+                if (tempCostG < neighbourNode.costG)
+                {
                     neighbourNode.setPrevNode(currNode);
                     neighbourNode.costG = tempCostG;
                     neighbourNode.costH = calculateDistanceCost(neighbourNode, endnode);
@@ -134,25 +143,30 @@ public class TestGrid : MonoBehaviour
         //out of nodes on open list, but path hasnt been found
         return null;
     }
-    private int calculateDistanceCost(PathNode a, PathNode b) {               //distance ignoring obstructions
+    private int calculateDistanceCost(PathNode a, PathNode b)
+    {               //distance ignoring obstructions
         int distX = Mathf.Abs(a.x - b.x);
         int distY = Mathf.Abs(a.y - b.y);
         int remaining = Mathf.Abs(distX - distY);
-        return MOVE_DIAGONAL_COST * Mathf.Min(distX, distY) + 
+        return MOVE_DIAGONAL_COST * Mathf.Min(distX, distY) +
                MOVE_STRAIGHT_COST * remaining;
     }
-    private PathNode getLowestFCostNode(List<PathNode> pathNodeList) {
+    private PathNode getLowestFCostNode(List<PathNode> pathNodeList)
+    {
         PathNode lowestFCostNode = pathNodeList[0];
-        for (int i = 0; i < pathNodeList.Count; i++) {
+        for (int i = 0; i < pathNodeList.Count; i++)
+        {
             if (pathNodeList[i].costF < lowestFCostNode.costF) lowestFCostNode = pathNodeList[i];      //simple min comparison
         }
         return lowestFCostNode;
     }
-    private List<PathNode> calculatePath(PathNode endNode) {
+    private List<PathNode> calculatePath(PathNode endNode)
+    {
         List<PathNode> path = new List<PathNode>();
         path.Add(endNode);
         PathNode currNode = endNode;
-        while (currNode.getPrevNode() != null) {
+        while (currNode.getPrevNode() != null)
+        {
             //cycle through all the nodes and find its "parent"
             //until it reaches a node with no parent, aka the start node
             path.Add(currNode.getPrevNode());
@@ -161,11 +175,15 @@ public class TestGrid : MonoBehaviour
         path.Reverse();         //since the first value is the end, need to reverse it. 
         return path;
     }
-    private List<PathNode> getNeighbours(PathNode currNode) {
+    private List<PathNode> getNeighbours(PathNode currNode)
+    {
         List<PathNode> Neighbours = new List<PathNode>();
-        for (int x = -1; x <= 1; ++x) {
-            for (int y = -1; y <= 1; ++y) {
-                if (pathfindingGrid.checkValid(currNode.x + x, currNode.y + y)) {           //ensure that the node is a neighbour and not on edge
+        for (int x = -1; x <= 1; ++x)
+        {
+            for (int y = -1; y <= 1; ++y)
+            {
+                if (pathfindingGrid.checkValid(currNode.x + x, currNode.y + y))
+                {           //ensure that the node is a neighbour and not on edge
                     if (x == 0 && y == 0) continue;                                         //ensure node is not itself
                     Neighbours.Add(pathfindingGrid.getGridObject(currNode.x + x, currNode.y + y));
                 }
@@ -174,21 +192,32 @@ public class TestGrid : MonoBehaviour
         return Neighbours;
     }
 
+    private int getTotalCost(PathNode startnode, PathNode endnode)
+    {
+        findPath(startnode, endnode);
+        //the last node's costG, should be the total cost of the journey
+        return endnode.costG;
+    }
+
     void Update()
     {
         //diffuse heat
-        if (Time.timeScale > 0 && arrayHeat.getRebuild()) {
+        if (Time.timeScale > 0 && arrayHeat.getRebuild())
+        {
             arrayHeat.setRebuild(diffuse(arrayHeat));
         }
-        if (Time.timeScale > 0 && arrayRadiation.getRebuild()) {
+        if (Time.timeScale > 0 && arrayRadiation.getRebuild())
+        {
             arrayRadiation.setRebuild(diffuse(arrayRadiation));
         }
 
         //only rebuild mesh if both render and rebuild is true
-        switch (renderLayer) {
+        switch (renderLayer)
+        {
             case 1:
                 //heat visual
-                if (arrayHeat.getRebuild()) {
+                if (arrayHeat.getRebuild())
+                {
                     //for (int x = 0; x < mapData.getWidth(); ++x)
                     //{
                     //    for (int y = 0; y < mapData.getHeight(); ++y)
@@ -202,7 +231,8 @@ public class TestGrid : MonoBehaviour
                 break;
             case 2:
                 //access visual
-                if (pathfindingGrid.getRebuild()) {                             //hardcoded
+                if (pathfindingGrid.getRebuild())
+                {                             //hardcoded
                     //for (int x = 0; x < mapData.getWidth(); ++x) {
                     //    for (int y = 0; y < mapData.getHeight(); ++y) {
                     //        debugTextArray[x, y].text = pathfindingGrid.getGridObject(x, y).ToString();
@@ -232,6 +262,7 @@ public class TestGrid : MonoBehaviour
 
     }
 
+    //debug
     public static TextMesh createWorldText(string text = "null", Transform parent = null, Vector3 localPosition = default(Vector3), int sortingOrder = 0)
     {
         GameObject worldTextObject = new GameObject("Debug_Text", typeof(TextMesh));
@@ -248,13 +279,16 @@ public class TestGrid : MonoBehaviour
         return textMesh;
     }
 
+    //overlay
     public void updateMeshVisual(BaseGrid<int> arrayType)
     {
         CreateEmptyMeshData(mapData.getWidth() * mapData.getHeight(),
             out Vector3[] vertices, out Vector2[] uv, out int[] triangles);
 
-        for (int x = 0; x < mapData.getWidth(); x++) {
-            for (int y = 0; y < mapData.getHeight(); y++) {
+        for (int x = 0; x < mapData.getWidth(); x++)
+        {
+            for (int y = 0; y < mapData.getHeight(); y++)
+            {
                 int index = x * mapData.getHeight() + y;
                 Vector3 quadSize = new Vector3(1, 1) * mapData.getCellSize();
 
@@ -342,13 +376,14 @@ public class TestGrid : MonoBehaviour
                         Vector2 gridValueUV = new Vector2(access / 7f, 0f);
                         AddQuad(vertices, uv, triangles, index, pathfindingGrid.getWorldPos(x, y) + 0.5f * quadSize, quadSize, gridValueUV);
                     }
-                    else {
+                    else
+                    {
                         Vector2 gridValueUV = new Vector2(0, 0f);           //if not walkable then just black
                         AddQuad(vertices, uv, triangles, index, pathfindingGrid.getWorldPos(x, y) + 0.5f * quadSize, quadSize, gridValueUV);
                     }
-                    
+
                 }
-                
+
             }
         }
         mesh.vertices = vertices;
@@ -382,72 +417,7 @@ public class TestGrid : MonoBehaviour
         triangles = new int[quadCount * 6];
     }
 
-    public void floodrandom()
-    {
-        //theoritical usage of breadth first search, A* for searching
-        //https://www.geeksforgeeks.org/flood-fill-algorithm/ 
-        //create a list and a hash set for the values
-
-        int tileCount = 0;
-        int totalTileCount = mapData.getWidth() * mapData.getHeight();
-
-        int setRandAccess = 0;
-        //set all walls to 0, add the rest into the open list
-
-        while (true)
-        {
-            setRandAccess++;
-            //choose a random point to start
-            while (true)            //condition
-            {
-                //loop and add
-
-                //flood fill from point 1
-
-                tileCount++;
-            }
-
-            if (tileCount >= totalTileCount) break;             //only exit when the number of accesses, or assignment is more than the total number of cells
-        }
-        //do stuff here
-    }
-
-    private bool diffuse(BaseGrid<double> arrayType)
-    {
-        bool updated = false;
-
-        for (int x = 0; x < mapData.getWidth(); ++x)
-        {
-            for (int y = 0; y < mapData.getHeight(); ++y)
-            {
-                double self = arrayType.getGridObject(x, y);
-                for (int nX = -1; nX <= 1; ++nX)
-                {
-                    for (int nY = -1; nY <= 1; ++nY)
-                    {
-                        if (arrayType.checkValid(x + nX, y + nY))
-                        {           //ensure that the node is a neighbour and not on edge
-                            if (x == 0 && y == 0) continue;                                         //ensure node is not itself
-                            double neighbour = arrayType.getGridObject(x + nX, y + nY);
-                            double diff = self - neighbour;
-                            if (diff > 0.5)
-                            {
-                                updated = true;
-                                //assumes distribution of 2%                                        //get insulation values afterwards
-                                diff /= 50;
-                                self -= diff * Time.timeScale;
-                                neighbour += diff * Time.timeScale;
-                                arrayType.setGridObject(x + nX, y + nY, neighbour);
-                                arrayType.setGridObject(x, y, self);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return updated;
-    }
-
+    //toggle
     public void toggleHeat()
     {
         if (renderLayer == 1)
@@ -483,7 +453,7 @@ public class TestGrid : MonoBehaviour
         if (renderLayer == 2)
         {
             meshRenderer.enabled = false;
-            renderLayer = 0; 
+            renderLayer = 0;
             //for (int x = 0; x < mapData.getWidth(); ++x)
             //{
             //    for (int y = 0; y < mapData.getHeight(); ++y)
@@ -537,5 +507,115 @@ public class TestGrid : MonoBehaviour
             //    }
             //}
         }
+    }
+
+    //calculation
+    public void floodrandom()
+    {
+        //theoritical usage of breadth first search, A* for searching
+        //https://www.geeksforgeeks.org/flood-fill-algorithm/ 
+        //create a list and a hash set for the values
+
+        int tileCount = 0;
+        int totalTileCount = mapData.getWidth() * mapData.getHeight();
+
+        int setRandAccess = 0;
+        //set all walls to 0, add the rest into the open list
+
+        while (true)
+        {
+            setRandAccess++;
+            //choose a random point to start
+            while (true)            //condition
+            {
+                //loop and add
+
+                //flood fill from point 1
+
+                tileCount++;
+            }
+
+            //if (tileCount >= totalTileCount) break;             //only exit when the number of accesses, or assignment is more than the total number of cells
+        }
+        //do stuff here
+    }
+
+    private bool diffuse(BaseGrid<double> arrayType)
+    {
+        bool updated = false;
+
+        for (int x = 0; x < mapData.getWidth(); ++x)
+        {
+            for (int y = 0; y < mapData.getHeight(); ++y)
+            {
+                double self = arrayType.getGridObject(x, y);
+                for (int nX = -1; nX <= 1; ++nX)
+                {
+                    for (int nY = -1; nY <= 1; ++nY)
+                    {
+                        if (arrayType.checkValid(x + nX, y + nY))
+                        {           //ensure that the node is a neighbour and not on edge
+                            if (x == 0 && y == 0) continue;                                         //ensure node is not itself
+                            double neighbour = arrayType.getGridObject(x + nX, y + nY);
+                            double diff = self - neighbour;
+                            if (diff > 0.5)
+                            {
+                                updated = true;
+                                //assumes distribution of 2%                                        //get insulation values afterwards
+                                diff /= 50;
+                                self -= diff * Time.timeScale;
+                                neighbour += diff * Time.timeScale;
+                                arrayType.setGridObject(x + nX, y + nY, neighbour);
+                                arrayType.setGridObject(x, y, self);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return updated;
+    }
+
+    //inventory
+    public ItemStat findNearest(int xCoord, int yCoord, string name)           //brute force
+    {
+        List<ItemStat> itemSearch = new List<ItemStat>();
+        ItemStat nearestItem = null;
+
+        //search through the list and returns the nearest item, if any
+        for (int x = 0; x < mapData.getWidth(); ++x)
+        {
+            for (int y = 0; y < mapData.getHeight(); ++y)
+            {
+                //check item in list
+                if (inventoryArray.getGridObject(x,y).name == name) itemSearch.Add(inventoryArray.getGridObject(x, y));
+            }
+        }
+        if (itemSearch.Count <= 0) return nearestItem;              //aka null
+        //index into a secondary list to find the closest
+        //pathfind from start to end to find nearest distance via cost
+        int cost = int.MaxValue;
+        foreach (ItemStat item in itemSearch)
+        {
+            PathNode startNode = pathfindingGrid.getGridObject(xCoord, yCoord);
+            PathNode endNode = pathfindingGrid.getGridObject(item.xCoord, item.yCoord);
+            int itemCost = getTotalCost(startNode, endNode);
+            if (itemCost < cost)
+            {
+                cost = itemCost;
+                nearestItem = item;
+            }
+        }
+        return nearestItem;     
+        //item location and access priority
+        //if either process cannot find the item, then return null
+    }
+
+    public void placeItem(int x, int y, ItemStat item)
+    {
+        //attempt to place item on grid, if grid is occupied or solid
+        //then place on nearest empty spot
+
+        //flood fill until an open spot is found
     }
 }

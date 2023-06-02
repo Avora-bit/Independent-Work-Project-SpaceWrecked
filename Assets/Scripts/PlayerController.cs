@@ -10,7 +10,7 @@ public class PlayerController : BaseSingleton<PlayerController>
 
     private MapData mapData;
     private float minPosX, minPosY, maxPosX, maxPosY;
-    private TestGrid testGrid;
+    private MasterGrid masterGrid;
 
     public GameObject followCamTarget = null;
 
@@ -28,7 +28,7 @@ public class PlayerController : BaseSingleton<PlayerController>
         mapData = FindAnyObjectByType<MapData>();
         NPC = transform.parent.parent.GetChild(3).GetComponent<NPCController>();
 
-        testGrid = gameObject.transform.parent.parent.GetChild(1).GetComponent<TestGrid>();
+        masterGrid = gameObject.transform.parent.parent.GetChild(1).GetComponent<MasterGrid>();
         minPosX = mapData.getOriginPos().x;
         minPosY = mapData.getOriginPos().y;
         maxPosX = -mapData.getOriginPos().x;
@@ -68,8 +68,8 @@ public class PlayerController : BaseSingleton<PlayerController>
                     //testGrid.pathfindingGrid.setRebuild(true);
 
                     //increments
-                    double temp = Mathf.Clamp((float)testGrid.arrayHeat.getGridObject(mousePos) + 100, mapData.getMinTemp(), mapData.getMaxTemp());
-                    testGrid.arrayHeat.setGridObject(mousePos, temp);
+                    double temp = Mathf.Clamp((float)masterGrid.arrayHeat.getGridObject(mousePos) + 100, mapData.getMinTemp(), mapData.getMaxTemp());
+                    masterGrid.arrayHeat.setGridObject(mousePos, temp);
                 }
                 else if (b_IsLMB && !Input.GetMouseButton(0))      //LMB up
                 {
@@ -93,8 +93,8 @@ public class PlayerController : BaseSingleton<PlayerController>
                     //testGrid.pathfindingGrid.getGridObject(mousePos).isWalkable = true;
                     //testGrid.pathfindingGrid.setRebuild(true);
 
-                    double temp = Mathf.Clamp((float)testGrid.arrayHeat.getGridObject(mousePos) - 100, mapData.getMinTemp(), mapData.getMaxTemp());
-                    testGrid.arrayHeat.setGridObject(mousePos, temp);
+                    double temp = Mathf.Clamp((float)masterGrid.arrayHeat.getGridObject(mousePos) - 100, mapData.getMinTemp(), mapData.getMaxTemp());
+                    masterGrid.arrayHeat.setGridObject(mousePos, temp);
                 }
                 else if (b_IsRMB && !Input.GetMouseButton(1))      //RMB up
                 {
