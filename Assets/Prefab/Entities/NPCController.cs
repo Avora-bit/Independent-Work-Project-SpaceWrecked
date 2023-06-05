@@ -25,15 +25,15 @@ public class NPCController : MonoBehaviour
     private void Update()
     {
         //constantly try to pick up items
-        if (testingNPC.getItemPtr() == null)
-        {
-            testingNPC.setItemPtr(masterGrid.findNearest((int)testingNPC.transform.position.x, (int)testingNPC.transform.position.y, "Aluminium"));
-            Debug.Log("waiting for item");
-        }
-        else
-        {
+        //if (testingNPC.getItemPtr() == null)
+        //{
+        //    Debug.Log("waiting for item");
+        //    testingNPC.setItemPtr(masterGrid.findNearest((int)testingNPC.transform.position.x, (int)testingNPC.transform.position.y, "Aluminium"));
+        //}
+        //else
+        //{
 
-        }
+        //}
 
         //assign target
         //check movement vector

@@ -91,7 +91,6 @@ public class MasterGrid : MonoBehaviour
         }
 
         if (startnode == null || endnode == null || !endnode.isWalkable) return null;
-        Debug.Log("valid locations, finding path");
         //prevents if location nodes are outside the map, or if the end node is solid
         //add another check for access array
 
@@ -198,6 +197,7 @@ public class MasterGrid : MonoBehaviour
 
     private int getTotalCost(PathNode startnode, PathNode endnode)
     {
+        findPath(startnode, endnode);
         return endnode.costG;
         //the last node's costG, should be the total cost of the journey
     }
@@ -582,29 +582,31 @@ public class MasterGrid : MonoBehaviour
     //inventory
     public ItemStat findNearest(int xCoord, int yCoord, string name)           //brute force
     {
-        List<ItemStat> itemSearch = new List<ItemStat>();
         ItemStat nearestItem = null;                //comparison pointer
-        
+        int cost = int.MaxValue;                    //max cost to compare smaller values
+
         foreach (ItemStat item in inventoryArray)
         {
-            if (item.name == name) itemSearch.Add(item);
-        }
-        if (itemSearch.Count <= 0) return nearestItem;              //aka null
-        //index into a secondary list to find the closest
-        //pathfind from start to end to find nearest distance via cost
-        int cost = int.MaxValue;
-        foreach (ItemStat item in itemSearch)
-        {
-            PathNode startNode = pathfindingGrid.getGridObject(xCoord, yCoord);
-            PathNode endNode = pathfindingGrid.getGridObject(new Vector3(item.xCoord, item.yCoord, 0));     //convert world position to vector to call overloaded function
-            int itemCost = getTotalCost(startNode, endNode);
-            if (itemCost < cost)
+            if (item.name == name)
             {
-                cost = itemCost;
-                nearestItem = item;
+                PathNode startNode = pathfindingGrid.getGridObject(xCoord, yCoord);
+                PathNode endNode = pathfindingGrid.getGridObject(new Vector3(item.xCoord, item.yCoord, 0));     //convert world position to vector to call overloaded function
+                int itemCost = getTotalCost(startNode, endNode);
+                Debug.Log("itemCost: "+itemCost);
+                //cost based comparison
+                if (itemCost < cost)
+                {
+                    cost = itemCost;
+                    nearestItem = item;
+                }
             }
         }
-        return nearestItem;
+        if (nearestItem == null)
+        {
+            Debug.Log("item not found");
+        }
+
+        return nearestItem;              //aka null, or closest item
         //if either process cannot find the item, then return null
     }
 

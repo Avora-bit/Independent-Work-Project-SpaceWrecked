@@ -5,10 +5,7 @@ public class BaseEntity : MonoBehaviour
 {
     // This is the base Entity class for a moving NPC. 
 
-    MasterGrid mapinstance;
-        //get reference to map
-        //get walkspeed data
-        //change walkspeed
+    MasterGrid mapInstance;
 
     //pathfinding stuff
     private List<Vector3> pathVectorList = null;
@@ -25,6 +22,8 @@ public class BaseEntity : MonoBehaviour
 
     private GameObject npcPtr = null;            //pointer to object
     private ItemStat itemPtr = null;
+
+    private List<ItemStat> inventory = new List<ItemStat>();
 
     // FSM States
     enum FSMstates
@@ -136,13 +135,13 @@ public class BaseEntity : MonoBehaviour
 
     public void setMapInstance(MasterGrid instance)
     {
-        mapinstance = instance;
+        mapInstance = instance;
     }
 
     public void setTargetPos(Vector3 targetPos)
     {
         currentPathIndex = 0;
-        pathVectorList = mapinstance.findVectorPath(transform.position, targetPos);
+        pathVectorList = mapInstance.findVectorPath(transform.position, targetPos);
 
         if (pathVectorList != null && pathVectorList.Count > 1) pathVectorList.RemoveAt(0);     //remove self position
     }
@@ -189,6 +188,17 @@ public class BaseEntity : MonoBehaviour
         //if no task, then assign task
 
         //set pathfind target
+        if (itemPtr == null)
+        {
+            Debug.Log("waiting for item");
+            itemPtr = mapInstance.findNearest((int)transform.position.x, (int)transform.position.y, "Aluminium");
+        }
+        else
+        {
+            //null
+        }
+
+        //move to object
         if (npcPtr != null)
         {
             //chase after NPC
@@ -200,15 +210,15 @@ public class BaseEntity : MonoBehaviour
             //get item
             if (pathVectorList == null)     
             {
-                Debug.Log("waiting for item path");
                 setTargetPos(new Vector3(itemPtr.xCoord, itemPtr.yCoord, 0));
             }
-            Debug.Log("moving to item");
         }
         else
         {
             //idle
         }
+
+        
 
         //movement
         handleMovement();
@@ -250,7 +260,8 @@ public class BaseEntity : MonoBehaviour
         //if NPC, then interact
 
         //if item, then pickup
-        mapinstance.inventoryArray.Remove(itemPtr);
+        inventory.Add(itemPtr);
+        mapInstance.inventoryArray.Remove(itemPtr);
         itemPtr = null;
 
         //if machine then interact
