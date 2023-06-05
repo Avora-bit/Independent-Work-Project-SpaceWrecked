@@ -1,7 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using Unity.Mathematics;
-using UnityEngine;
 
 public class PathNode {
     private BaseGrid<PathNode> grid;            //reference to the overall grid

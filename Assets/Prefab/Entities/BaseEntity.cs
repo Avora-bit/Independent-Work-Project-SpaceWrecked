@@ -11,8 +11,8 @@ public class BaseEntity : MonoBehaviour
         //change walkspeed
 
     //pathfinding stuff
-    List<Vector3> pathVectorList;
-    int currentPathIndex = 0;
+    private List<Vector3> pathVectorList = null;
+    private int currentPathIndex = 0;
 
     // base stats 0-10;
     private int pointAlloc_BaseStat;
@@ -23,7 +23,8 @@ public class BaseEntity : MonoBehaviour
     private float rateMove, rateWork, rateLearn, rateResearch;
     private float maxCapacity, currCapacity;
 
-    private GameObject targetPtr;            //pointer to object
+    private GameObject npcPtr = null;            //pointer to object
+    private ItemStat itemPtr = null;
 
     // FSM States
     enum FSMstates
@@ -143,19 +144,17 @@ public class BaseEntity : MonoBehaviour
         currentPathIndex = 0;
         pathVectorList = mapinstance.findVectorPath(transform.position, targetPos);
 
-        if (pathVectorList != null && pathVectorList.Count > 1) pathVectorList.RemoveAt(0);
-
+        if (pathVectorList != null && pathVectorList.Count > 1) pathVectorList.RemoveAt(0);     //remove self position
     }
 
     private void handleMovement()
     {
-        if (pathVectorList != null)
+        if (pathVectorList != null)     //only move when there is a path
         {
             Vector3 targetPos = pathVectorList[currentPathIndex];
             if (Vector3.Distance(transform.position, targetPos) > 0.05f)
             {
                 Vector3 moveDir = (targetPos - transform.position).normalized;
-                float distanceBefore = Vector3.Distance(transform.position, targetPos);
                 transform.position = transform.position + moveDir * rateMove * Time.deltaTime;
             }
             else
@@ -171,7 +170,6 @@ public class BaseEntity : MonoBehaviour
     {
         pathVectorList = null;
         //pick up item
-
         interact();
     }
 
@@ -191,9 +189,57 @@ public class BaseEntity : MonoBehaviour
         //if no task, then assign task
 
         //set pathfind target
+        if (npcPtr != null)
+        {
+            //chase after NPC
+            if (pathVectorList == null)
+                setTargetPos(npcPtr.transform.position);
+        }
+        else if (itemPtr != null)
+        {
+            //get item
+            if (pathVectorList == null)     
+            {
+                Debug.Log("waiting for item path");
+                setTargetPos(new Vector3(itemPtr.xCoord, itemPtr.yCoord, 0));
+            }
+            Debug.Log("moving to item");
+        }
+        else
+        {
+            //idle
+        }
+
+        //movement
         handleMovement();
         //do task
+        //interact function called by handlemmovement
 
+
+        //debug
+
+    }
+
+    
+
+    public ItemStat getItemPtr()
+    {
+        return itemPtr;
+    }
+
+    public void setItemPtr(ItemStat target)
+    {
+        itemPtr = target;
+    }
+
+    public GameObject getNPCPtr()
+    {
+        return npcPtr;
+    }
+
+    public void setNPCPtr(GameObject target)
+    {
+        npcPtr = target;
     }
 
     private void interact()
@@ -201,7 +247,11 @@ public class BaseEntity : MonoBehaviour
         //check what is on the position
         //get position, then ask all layers to do stuff
 
+        //if NPC, then interact
+
         //if item, then pickup
+        mapinstance.inventoryArray.Remove(itemPtr);
+        itemPtr = null;
 
         //if machine then interact
     }

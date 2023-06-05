@@ -19,6 +19,8 @@ public class PlayerController : BaseSingleton<PlayerController>
 
     private NPCController NPC;
 
+    public GameObject itemPrefab;
+
 
     private bool b_IsLMB = false, b_IsRMB = false, b_IsMMB = false;
 
@@ -26,12 +28,12 @@ public class PlayerController : BaseSingleton<PlayerController>
     {
         //assign reference to map size
         mapData = FindAnyObjectByType<MapData>();
-        NPC = transform.parent.parent.GetChild(3).GetComponent<NPCController>();
+        NPC = transform.parent.parent.GetChild(2).GetComponent<NPCController>();
 
         masterGrid = gameObject.transform.parent.parent.GetChild(1).GetComponent<MasterGrid>();
-        minPosX = mapData.getOriginPos().x;
+        minPosX = mapData.getOriginPos().x;     //negative
         minPosY = mapData.getOriginPos().y;
-        maxPosX = -mapData.getOriginPos().x;
+        maxPosX = -mapData.getOriginPos().x;    //double negative
         maxPosY = -mapData.getOriginPos().y;
     }
 
@@ -67,16 +69,32 @@ public class PlayerController : BaseSingleton<PlayerController>
                     //testGrid.pathfindingGrid.getGridObject(mousePos).isWalkable = false; 
                     //testGrid.pathfindingGrid.setRebuild(true);
 
-                    //increments
-                    double temp = Mathf.Clamp((float)masterGrid.arrayHeat.getGridObject(mousePos) + 100, mapData.getMinTemp(), mapData.getMaxTemp());
-                    masterGrid.arrayHeat.setGridObject(mousePos, temp);
+                    //heat
+                    //double temp = Mathf.Clamp((float)masterGrid.arrayHeat.getGridObject(mousePos) + 100, mapData.getMinTemp(), mapData.getMaxTemp());
+                    //masterGrid.arrayHeat.setGridObject(mousePos, temp);
+
+
                 }
                 else if (b_IsLMB && !Input.GetMouseButton(0))      //LMB up
                 {
                     b_IsLMB = false;
-                    //based on start and end, do smth
+                    //dragLMBstart, dragLMBend
 
-                    dragLMBstart = dragLMBend = new Vector3(0, 0, 0);   //reset the position
+                    //place item
+                    //generate new item stat
+
+                    ItemStat newItem = itemPrefab.GetComponent<ItemStat>();
+                    if (masterGrid.pathfindingGrid.getGridObject(mousePos) != null)
+                    {
+                        //newItem.xCoord = masterGrid.pathfindingGrid.getGridObject(mousePos).x;
+                        //newItem.yCoord = masterGrid.pathfindingGrid.getGridObject(mousePos).y;
+                        newItem.xCoord = (int)Mathf.Clamp(mousePos.x, -mapData.getWidth() / 2, mapData.getWidth() / 2);
+                        newItem.yCoord = (int)Mathf.Clamp(mousePos.y, -mapData.getHeight() / 2, mapData.getHeight() / 2);
+                        masterGrid.inventoryArray.Add(newItem);
+                    }
+
+
+                    dragLMBstart = dragLMBend = Vector3.zero;   //reset the position
                 }
                 else
                 {
@@ -93,12 +111,15 @@ public class PlayerController : BaseSingleton<PlayerController>
                     //testGrid.pathfindingGrid.getGridObject(mousePos).isWalkable = true;
                     //testGrid.pathfindingGrid.setRebuild(true);
 
-                    double temp = Mathf.Clamp((float)masterGrid.arrayHeat.getGridObject(mousePos) - 100, mapData.getMinTemp(), mapData.getMaxTemp());
-                    masterGrid.arrayHeat.setGridObject(mousePos, temp);
+                    //heat
+                    //double temp = Mathf.Clamp((float)masterGrid.arrayHeat.getGridObject(mousePos) - 100, mapData.getMinTemp(), mapData.getMaxTemp());
+                    //masterGrid.arrayHeat.setGridObject(mousePos, temp);
+
                 }
                 else if (b_IsRMB && !Input.GetMouseButton(1))      //RMB up
                 {
                     b_IsRMB = false;
+
                 }
                 else
                 {

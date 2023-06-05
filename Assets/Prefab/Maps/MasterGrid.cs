@@ -17,7 +17,6 @@ public class MasterGrid : MonoBehaviour
 
     [SerializeField] private Material[] tempMaterials;
 
-
     public BaseGrid<double> arrayHeat = new BaseGrid<double>();
     public BaseGrid<double> arrayRadiation = new BaseGrid<double>();
 
@@ -28,7 +27,7 @@ public class MasterGrid : MonoBehaviour
     private const int MOVE_STRAIGHT_COST = 10;
     private const int MOVE_DIAGONAL_COST = 14;              //sqrt of 10+10
 
-    public BaseGrid<ItemStat> inventoryArray = new BaseGrid<ItemStat>();
+    public List<ItemStat> inventoryArray = new List<ItemStat>();
 
     //able to store prefabs as well as construction blueprints
     public BaseGrid<GameObject> structureArray = new BaseGrid<GameObject>();
@@ -62,7 +61,6 @@ public class MasterGrid : MonoBehaviour
         arrayHeat.generateGrid(mapData, (arrayHeat, x, y) => 0);
         arrayRadiation.generateGrid(mapData, (arrayHeat, x, y) => 0);
         pathfindingGrid.generateGrid(mapData, (pathfindingGrid, x, y) => new PathNode(pathfindingGrid, x, y));             //prove that generics accept custom game objects
-        inventoryArray.generateGrid(mapData, (inventoryArray, x, y) => null);
     }
 
     public List<Vector3> findVectorPath(Vector3 startPos, Vector3 endPos)
@@ -71,7 +69,7 @@ public class MasterGrid : MonoBehaviour
         if (path != null)
         {
             List<Vector3> vectorPath = new List<Vector3>();
-            foreach (PathNode node in path)
+            foreach (PathNode node in path)     //convert path into world coords, center of grid
             {
                 vectorPath.Add(pathfindingGrid.getWorldPosCenter(node.x, node.y));
                 for (int i = 0; i < path.Count - 1; i++)
@@ -83,11 +81,17 @@ public class MasterGrid : MonoBehaviour
             }
             return vectorPath;
         }
-        return null;
+        return null;        //path is null
     }
     public List<PathNode> findPath(PathNode startnode, PathNode endnode)
     {
+        if (endnode == null)
+        {
+            Debug.Log("endnode null");
+        }
+
         if (startnode == null || endnode == null || !endnode.isWalkable) return null;
+        Debug.Log("valid locations, finding path");
         //prevents if location nodes are outside the map, or if the end node is solid
         //add another check for access array
 
@@ -194,9 +198,8 @@ public class MasterGrid : MonoBehaviour
 
     private int getTotalCost(PathNode startnode, PathNode endnode)
     {
-        findPath(startnode, endnode);
-        //the last node's costG, should be the total cost of the journey
         return endnode.costG;
+        //the last node's costG, should be the total cost of the journey
     }
 
     void Update()
@@ -580,16 +583,11 @@ public class MasterGrid : MonoBehaviour
     public ItemStat findNearest(int xCoord, int yCoord, string name)           //brute force
     {
         List<ItemStat> itemSearch = new List<ItemStat>();
-        ItemStat nearestItem = null;
-
-        //search through the list and returns the nearest item, if any
-        for (int x = 0; x < mapData.getWidth(); ++x)
+        ItemStat nearestItem = null;                //comparison pointer
+        
+        foreach (ItemStat item in inventoryArray)
         {
-            for (int y = 0; y < mapData.getHeight(); ++y)
-            {
-                //check item in list
-                if (inventoryArray.getGridObject(x,y).name == name) itemSearch.Add(inventoryArray.getGridObject(x, y));
-            }
+            if (item.name == name) itemSearch.Add(item);
         }
         if (itemSearch.Count <= 0) return nearestItem;              //aka null
         //index into a secondary list to find the closest
@@ -598,7 +596,7 @@ public class MasterGrid : MonoBehaviour
         foreach (ItemStat item in itemSearch)
         {
             PathNode startNode = pathfindingGrid.getGridObject(xCoord, yCoord);
-            PathNode endNode = pathfindingGrid.getGridObject(item.xCoord, item.yCoord);
+            PathNode endNode = pathfindingGrid.getGridObject(new Vector3(item.xCoord, item.yCoord, 0));     //convert world position to vector to call overloaded function
             int itemCost = getTotalCost(startNode, endNode);
             if (itemCost < cost)
             {
@@ -606,8 +604,7 @@ public class MasterGrid : MonoBehaviour
                 nearestItem = item;
             }
         }
-        return nearestItem;     
-        //item location and access priority
+        return nearestItem;
         //if either process cannot find the item, then return null
     }
 

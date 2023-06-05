@@ -25,19 +25,27 @@ public class NPCController : MonoBehaviour
     private void Update()
     {
         //constantly try to pick up items
-        //ask inventory controller
-        //find nearest
-        //pathfind
-        //pickup
-        testingNPC.setTargetPos(masterGrid.findNearest((int)testingNPC.transform.position.x, (int)testingNPC.transform.position.y, "Aluminium").transform.position);
+        if (testingNPC.getItemPtr() == null)
+        {
+            testingNPC.setItemPtr(masterGrid.findNearest((int)testingNPC.transform.position.x, (int)testingNPC.transform.position.y, "Aluminium"));
+            Debug.Log("waiting for item");
+        }
+        else
+        {
+
+        }
+
+        //assign target
+        //check movement vector
+        //assign path
 
     }
 
     public GameObject spawnEntity(GameObject prefab)
     {
         GameObject entity = Instantiate(prefab, transform);
-        int xPos = Random.Range(-mapData.getWidth() / 2, mapData.getWidth() / 2);
-        int yPos = Random.Range(-mapData.getHeight() / 2, mapData.getHeight() / 2);
+        int xPos = Random.Range(0, mapData.getWidth() / 2);
+        int yPos = Random.Range(0, mapData.getHeight() / 2);
         entity.transform.position = new Vector3(xPos, yPos, 0);
         entity.GetComponent<BaseEntity>().setMapInstance(masterGrid);
         return entity;
