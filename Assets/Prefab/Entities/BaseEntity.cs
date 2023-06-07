@@ -12,8 +12,19 @@ public class BaseEntity : MonoBehaviour
     private int currentPathIndex = 0;
 
     // base stats 0-10;
-    private int pointAlloc_BaseStat;
-    private int[,] list_Stat = new int[4, 2];                //0 = stat, 1 = exp
+    public int pointAlloc_BaseStat = 15;                        //out of 40
+    private int[,] list_Stat = new int[4, 2];                   //0 = stat, 1 = exp
+
+    // Skill Level
+    public int pointAlloc_BaseSkill = 40;                       //out of 200
+    //first value is the level, followed by current exp
+    private int[,] list_Skill = new int[10, 2];                  //0 = skill, 1 = exp
+
+    // Priority Queue                           // from a scale of -3 to 3, the higher the priority, the more likely the NPC is assigned the task
+    // The task is calculated after needs, only NPC with non-urgent needs are assigned a task
+    //haul, construction, cook, plants, animals, craft, medical, artistic
+    //no ranged, melee and social
+    public int[] taskPriority = new int[8];
 
     // General Value calculated from stats
     private float maxHealth, currHealth;
@@ -24,25 +35,29 @@ public class BaseEntity : MonoBehaviour
     private ItemStat itemPtr = null;
 
     private List<ItemStat> inventory = new List<ItemStat>();
+    private Task taskRef;           //reference to task in NPCController, attempt to finish task before taking another
+    //stored reference in case need to fulfill needs
 
     // FSM States
     enum FSMstates
     {
         IDLE, MOVE, HAUL,
         //needs
-
+        EAT, DRINK, REST, COMFORT, HYGIENE, RECREATION, SOCIAL,
         //task
-
+        CONSTRUCTION, COOK, PLANTS, ANIMAL, CRAFT, MEDICAL, ART, //no skill for social as it is not a task
         //combat
-        ATTACK, FLEE,
+        RANGED, MELEE, FLEE,
+        //else
+        TOTALSTATES
     }
 
     // Lethal Needs
-    private float needThreshold;                  //percentage of max value to seek out need fulfillment
+    public float needThreshold = 0.3f;                          //percentage of max value to seek out need fulfillment
     private float maxHunger, currHunger, rateHunger;
     private float maxThirst, currThirst, rateThirst;
     private float maxEnergy, currEnergy, rateEnergy;
-    private float maxOxygen, currOxygen, rateOxygen;        //value is based on environment
+    private float maxOxygen, currOxygen, rateOxygen;            //constant depletion, value is based on environment
 
     // Threshold Needs                          //value is based on environment
     private float minTemperature, maxTemperature;
@@ -55,23 +70,6 @@ public class BaseEntity : MonoBehaviour
     private float maxFun, currFun, rateFun;
     private float maxSocial, currSocial, rateSocial;
 
-    // Skill Level
-    private int pointAlloc_BaseSkill;
-    //first value is the level, followed by current exp
-    private int[,] list_Skill = new int[10, 2];                  //0 = skill, 1 = exp
-
-    // Priority Queue                           // from a scale of -10 to 10, the higher the priority, the more likely the NPC is assigned the task,
-    // the lower the value, the more likely someone else is assigned the task
-    // The task is calculated after needs, only NPC with non-urgent needs are assigned a task
-    private int priorityHaul = 0;               //hauling involves moving items to stockpiles, taking items to stockpiles, refilling machines
-    private int priorityConstruction = 0;
-    private int priorityCook = 0;
-    private int priorityFarm = 0;
-    private int priorityTend = 0;               //to break down into seperate tasks and convert into a list
-    private int priorityCraft = 0;
-    private int priorityMedical = 0;
-    private int priorityArtistic = 0;
-    //no ranged, melee and social
 
     // Equipment
     // should be pointers to the object
@@ -89,7 +87,6 @@ public class BaseEntity : MonoBehaviour
         {
             // Base stats
             //distributes from point allocation
-            pointAlloc_BaseStat = 15;                       //0.4 allocation out of 40
                                                             //list_Stat[0, 0]
                                                             //generate 3 values for the ranges
                                                             //sort the 3 values
@@ -99,13 +96,35 @@ public class BaseEntity : MonoBehaviour
                                                             //3 = max - 3rd range
 
             // GV
-            maxHealth = 100 + list_Stat[0, 0] * 10;          //theoritical 100-200 health range
+            maxHealth = 100 + list_Stat[0, 0] * 10;         //theoritical 100-200 health range
             currHealth = maxHealth;
             maxCapacity = 50 + list_Stat[0, 0] * 5;         //theoritical 50-100 carry capacity
-            rateMove = (2 + list_Stat[0, 0] / 5)*2;            //theoritical 4-8 move speed
-            rateWork = 1 + list_Stat[1, 0] / 10;          //theoritical 1-2 work speed
-            rateLearn = 1 + list_Stat[2, 0] / 10;      //theoritical 1-2 learn speed
-            rateResearch = 1 + list_Stat[2, 0] / 10;      //theoritical 1-2 research speed
+            rateMove = (2 + list_Stat[0, 0] / 5)*2;         //theoritical 4-8 move speed
+            rateWork = 1 + list_Stat[1, 0] / 10;            //theoritical 1-2 work speed
+            rateLearn = 1 + list_Stat[2, 0] / 10;           //theoritical 1-2 learn speed
+            rateResearch = 1 + list_Stat[2, 0] / 10;        //theoritical 1-2 research speed
+        }
+
+        //skill levels
+        {
+            //skill level
+
+            //follow method above for generating base stats
+
+            //LevelValue temp;
+            //temp.level = 0;
+            //temp.exp = 0;
+            //list_Skill[0] = temp;
+
+            //task priority
+        }
+
+        //task priority
+        {
+            //default assign all as 0
+            for (int i = 0; i < 8; i++) { taskPriority[i] = 0; }
+
+            //make functions to read and write the values
         }
 
         //needs
@@ -118,18 +137,6 @@ public class BaseEntity : MonoBehaviour
             //mood needs
         }
 
-        //skill levels
-        {
-            //skill level
-            pointAlloc_BaseSkill = 40;          //0.2 allocation, out of 200
-
-            //follow method above for generating base stats
-
-            //LevelValue temp;
-            //temp.level = 0;
-            //temp.exp = 0;
-            //list_Skill[0] = temp;
-        }
     }
 
 
@@ -263,6 +270,7 @@ public class BaseEntity : MonoBehaviour
         inventory.Add(itemPtr);
         mapInstance.inventoryArray.Remove(itemPtr);
         itemPtr = null;
+        Debug.Log(inventory.Count);
 
         //if machine then interact
     }

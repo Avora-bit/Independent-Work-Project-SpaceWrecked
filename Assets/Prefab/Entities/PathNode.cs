@@ -5,7 +5,7 @@ public class PathNode {
     public int costG, costH, costF;
     private PathNode prevNode;
 
-    public int costPenalty;                    //positive is bad, negative values is good
+    public int costPenalty = 0;                    //positive is bad, negative values is good
 
     public bool isWalkable = true;
     public int accessLayer = 1;

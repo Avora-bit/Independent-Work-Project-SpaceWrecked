@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class NPCController : MonoBehaviour
@@ -8,6 +9,8 @@ public class NPCController : MonoBehaviour
     [SerializeField] public GameObject prefabHuman, prefabDrone;
 
     BaseEntity testingNPC;
+
+    public List<Task> taskList = new List<Task>();
 
     private void Awake()
     {

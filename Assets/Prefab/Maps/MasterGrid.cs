@@ -15,10 +15,9 @@ public class MasterGrid : MonoBehaviour
     private int renderLayer = 0;            //0 for dont render, 1++ according to following arrays
     MeshRenderer meshRenderer;
 
-    [SerializeField] private Material[] tempMaterials;
-
     public BaseGrid<double> arrayHeat = new BaseGrid<double>();
     public BaseGrid<double> arrayRadiation = new BaseGrid<double>();
+    public BaseGrid<double> arrayOxygen = new BaseGrid<double>();
 
     public BaseGrid<PathNode> pathfindingGrid = new BaseGrid<PathNode>();
     //stores data for access levels, walkability and weighted paths
@@ -58,8 +57,9 @@ public class MasterGrid : MonoBehaviour
         GetComponent<MeshFilter>().mesh = mesh;
 
         //create grids with data type
-        arrayHeat.generateGrid(mapData, (arrayHeat, x, y) => 0);
+        arrayHeat.generateGrid(mapData, (arrayHeat, x, y) => -300);
         arrayRadiation.generateGrid(mapData, (arrayHeat, x, y) => 0);
+        arrayOxygen.generateGrid(mapData, (arrayOxygen, x, y) => 0);
         pathfindingGrid.generateGrid(mapData, (pathfindingGrid, x, y) => new PathNode(pathfindingGrid, x, y));             //prove that generics accept custom game objects
     }
 
@@ -110,12 +110,13 @@ public class MasterGrid : MonoBehaviour
         }
 
         startnode.costG = 0;        //starting node, cost = 0
-        startnode.costH = calculateDistanceCost(startnode, endnode);
+        startnode.costH = calculateDistance(startnode, endnode);
+        startnode.calculateCostF();
 
         while (openList.Count > 0)
         {
             PathNode currNode = getLowestFCostNode(openList);
-            if (currNode == endnode) return calculatePath(endnode);
+            if (currNode == endnode) return calculatePath(endnode);     //found path
             openList.Remove(currNode); closedList.Add(currNode);
 
             foreach (PathNode neighbourNode in getNeighbours(currNode))
@@ -123,7 +124,7 @@ public class MasterGrid : MonoBehaviour
                 if (closedList.Contains(neighbourNode)) continue;
                 if (!neighbourNode.isWalkable) { closedList.Add(neighbourNode); continue; }
                 //diagonal movement check;
-                if (calculateDistanceCost(currNode, neighbourNode) == MOVE_DIAGONAL_COST)           //check if this is diagonal
+                if (calculateDistance(currNode, neighbourNode) == MOVE_DIAGONAL_COST)           //check if this is diagonal
                 {
                     int dirX = neighbourNode.x - currNode.x;
                     int dirY = neighbourNode.y - currNode.y;
@@ -131,12 +132,12 @@ public class MasterGrid : MonoBehaviour
                         !pathfindingGrid.getGridObject(currNode.x, currNode.y + dirY).isWalkable) continue;     //ignore
                 }
 
-                int tempCostG = currNode.costG + calculateDistanceCost(currNode, neighbourNode) + neighbourNode.costPenalty;
+                int tempCostG = currNode.costG + calculateDistance(currNode, neighbourNode) + neighbourNode.costPenalty;
                 if (tempCostG < neighbourNode.costG)
                 {
                     neighbourNode.setPrevNode(currNode);
                     neighbourNode.costG = tempCostG;
-                    neighbourNode.costH = calculateDistanceCost(neighbourNode, endnode);
+                    neighbourNode.costH = calculateDistance(neighbourNode, endnode);
                     neighbourNode.calculateCostF();
 
                     if (!openList.Contains(neighbourNode)) openList.Add(neighbourNode);
@@ -146,7 +147,7 @@ public class MasterGrid : MonoBehaviour
         //out of nodes on open list, but path hasnt been found
         return null;
     }
-    private int calculateDistanceCost(PathNode a, PathNode b)
+    private int calculateDistance(PathNode a, PathNode b)
     {               //distance ignoring obstructions
         int distX = Mathf.Abs(a.x - b.x);
         int distY = Mathf.Abs(a.y - b.y);
@@ -157,14 +158,16 @@ public class MasterGrid : MonoBehaviour
     private PathNode getLowestFCostNode(List<PathNode> pathNodeList)
     {
         PathNode lowestFCostNode = pathNodeList[0];
-        for (int i = 0; i < pathNodeList.Count; i++)
+        for (int i = 1; i < pathNodeList.Count; i++)
         {
-            if (pathNodeList[i].costF < lowestFCostNode.costF) lowestFCostNode = pathNodeList[i];      //simple min comparison
+            if (pathNodeList[i].costF < lowestFCostNode.costF) 
+                lowestFCostNode = pathNodeList[i];
         }
         return lowestFCostNode;
     }
     private List<PathNode> calculatePath(PathNode endNode)
     {
+        //retracing steps
         List<PathNode> path = new List<PathNode>();
         path.Add(endNode);
         PathNode currNode = endNode;
@@ -213,6 +216,10 @@ public class MasterGrid : MonoBehaviour
         {
             arrayRadiation.setRebuild(diffuse(arrayRadiation));
         }
+        if (Time.timeScale > 0 && arrayOxygen.getRebuild())
+        {
+            arrayOxygen.setRebuild(diffuse(arrayOxygen));
+        }
 
         //only rebuild mesh if both render and rebuild is true
         switch (renderLayer)
@@ -229,7 +236,6 @@ public class MasterGrid : MonoBehaviour
                     //    }
                     //}
                     updateMeshVisual(arrayHeat);
-                    //arrayHeat.setRebuild(false);
                 }
                 break;
             case 2:
@@ -255,7 +261,18 @@ public class MasterGrid : MonoBehaviour
                     //    }
                     //}
                     updateMeshVisual(arrayRadiation);
-                    //arrayRadiation.setRebuild(false);
+                }
+                break;
+            case 4:
+                //oxygen visual
+                if (arrayOxygen.getRebuild())
+                {                             //hardcoded
+                    //for (int x = 0; x < mapData.getWidth(); ++x) {
+                    //    for (int y = 0; y < mapData.getHeight(); ++y) {
+                    //        debugTextArray[x, y].text = arrayRadiation.getGridObject(x, y).ToString();
+                    //    }
+                    //}
+                    updateMeshVisual(arrayOxygen);
                 }
                 break;
             default:
@@ -352,6 +369,13 @@ public class MasterGrid : MonoBehaviour
                     Vector2 gridValueUV = new Vector2((float)gridValueNormalized, 0);
                     AddQuad(vertices, uv, triangles, index, arrayType.getWorldPos(x, y) + 0.5f * quadSize, quadSize, gridValueUV);
                 }
+                else if (arrayType == arrayRadiation || arrayType == arrayOxygen)
+                {
+                    double gridValue = arrayType.getGridObject(x, y);
+                    double gridValueNormalized = gridValue / 100;           //percentage
+                    Vector2 gridValueUV = new Vector2((float)gridValueNormalized, 0);
+                    AddQuad(vertices, uv, triangles, index, arrayType.getWorldPos(x, y) + 0.5f * quadSize, quadSize, gridValueUV);
+                }
             }
         }
         mesh.vertices = vertices;
@@ -421,6 +445,7 @@ public class MasterGrid : MonoBehaviour
     }
 
     //toggle
+    public int getRenderLayer() { return renderLayer; }
     public void toggleHeat()
     {
         if (renderLayer == 1)
@@ -438,7 +463,7 @@ public class MasterGrid : MonoBehaviour
         else
         {
             meshRenderer.enabled = true;
-            meshRenderer.material = tempMaterials[0];
+            meshRenderer.material = Resources.Load<Material>("Material/HeatGradient");
             updateMeshVisual(arrayHeat);
             renderLayer = 1;
             //for (int x = 0; x < mapData.getWidth(); ++x)
@@ -468,7 +493,7 @@ public class MasterGrid : MonoBehaviour
         else
         {
             meshRenderer.enabled = true;
-            meshRenderer.material = tempMaterials[1];
+            meshRenderer.material = Resources.Load<Material>("Material/Access");
             updateMeshVisual(pathfindingGrid);                                  //requires update
             renderLayer = 2;
             //for (int x = 0; x < mapData.getWidth(); ++x)
@@ -498,9 +523,39 @@ public class MasterGrid : MonoBehaviour
         else
         {
             meshRenderer.enabled = true;
-            meshRenderer.material = tempMaterials[2];
-            updateMeshVisual(pathfindingGrid);                                  //requires update
+            meshRenderer.material = Resources.Load<Material>("Material/RadiationGradient");
+            updateMeshVisual(arrayRadiation);                                  //requires update
             renderLayer = 3;
+            //for (int x = 0; x < mapData.getWidth(); ++x)
+            //{
+            //    for (int y = 0; y < mapData.getHeight(); ++y)
+            //    {
+            //        debugTextArray[x, y].gameObject.SetActive(false);
+            //        debugTextArray[x, y].text = pathfindingGrid.getGridObject(x, y).ToString();
+            //    }
+            //}
+        }
+    }
+    public void toggleOxygen()
+    {
+        if (renderLayer == 4)
+        {
+            meshRenderer.enabled = false;
+            renderLayer = 0;
+            //for (int x = 0; x < mapData.getWidth(); ++x)
+            //{
+            //    for (int y = 0; y < mapData.getHeight(); ++y)
+            //    {
+            //        debugTextArray[x, y].gameObject.SetActive(false);
+            //    }
+            //}
+        }
+        else
+        {
+            meshRenderer.enabled = true;
+            meshRenderer.material = Resources.Load<Material>("Material/OxygenGradient");
+            updateMeshVisual(arrayOxygen);                                  //requires update
+            renderLayer = 4;
             //for (int x = 0; x < mapData.getWidth(); ++x)
             //{
             //    for (int y = 0; y < mapData.getHeight(); ++y)
@@ -585,14 +640,14 @@ public class MasterGrid : MonoBehaviour
         ItemStat nearestItem = null;                //comparison pointer
         int cost = int.MaxValue;                    //max cost to compare smaller values
 
+        PathNode startNode = pathfindingGrid.getGridObject(xCoord, yCoord);
+
         foreach (ItemStat item in inventoryArray)
         {
             if (item.name == name)
             {
-                PathNode startNode = pathfindingGrid.getGridObject(xCoord, yCoord);
                 PathNode endNode = pathfindingGrid.getGridObject(new Vector3(item.xCoord, item.yCoord, 0));     //convert world position to vector to call overloaded function
-                int itemCost = getTotalCost(startNode, endNode);
-                Debug.Log("itemCost: "+itemCost);
+                int itemCost = getTotalCost(startNode, endNode);            //pathfind to location, get cost
                 //cost based comparison
                 if (itemCost < cost)
                 {
@@ -601,20 +656,9 @@ public class MasterGrid : MonoBehaviour
                 }
             }
         }
-        if (nearestItem == null)
-        {
-            Debug.Log("item not found");
-        }
 
         return nearestItem;              //aka null, or closest item
         //if either process cannot find the item, then return null
     }
 
-    public void placeItem(int x, int y, ItemStat item)
-    {
-        //attempt to place item on grid, if grid is occupied or solid
-        //then place on nearest empty spot
-
-        //flood fill until an open spot is found
-    }
 }

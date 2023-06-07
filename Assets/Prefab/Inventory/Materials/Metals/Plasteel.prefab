@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 7847537839964252496}
   - component: {fileID: 4403106751087864459}
   m_Layer: 0
-  m_Name: Aluminium
+  m_Name: Plasteel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -44,20 +44,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 99e5feb54457372428b91945f068df57, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  name: Aluminium
-  weight: 3
-  durability: 100
+  name: Plasteel
+  weight: 4
+  durability: 130
   quantity: 1
   xCoord: 0
   yCoord: 0
   minTemp: 0
   maxTemp: 0
   beauty: 0
-  resHeat: 0.1
+  resHeat: 0.2
   wealth: 0
   isMaterial: 1
-  walkSpeed: 3
-  cleaniness: 0.5
-  resBlast: 0.1
+  walkSpeed: 2
+  cleaniness: 0.75
+  resBlast: 0.2
   fuel: 0
   DmgBlast: 0
