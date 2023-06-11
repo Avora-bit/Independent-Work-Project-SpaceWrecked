@@ -264,7 +264,7 @@ public class BaseEntity : MonoBehaviour
 
         //if item, then pickup
         inventory.Add(itemPtr);
-        mapInstance.inventoryArray.Remove(itemPtr);
+        Destroy(itemPtr.gameObject);
         itemPtr = null;
         Debug.Log(inventory.Count);
 

@@ -11,7 +11,6 @@ public class PlayerController : BaseSingleton<PlayerController>
     private MapData mapData;
     private float minPosX, minPosY, maxPosX, maxPosY;
     private MasterGrid masterGrid;
-    private NPCController npcController;
 
     public GameObject followCamTarget = null;
 
@@ -28,13 +27,12 @@ public class PlayerController : BaseSingleton<PlayerController>
     {
         //assign reference to map size
         mapData = FindAnyObjectByType<MapData>();
-        npcController = transform.parent.parent.GetChild(2).GetComponent<NPCController>();
-
-        masterGrid = gameObject.transform.parent.parent.GetChild(1).GetComponent<MasterGrid>();
         minPosX = mapData.getOriginPos().x;     //negative
         minPosY = mapData.getOriginPos().y;
         maxPosX = -mapData.getOriginPos().x;    //double negative
         maxPosY = -mapData.getOriginPos().y;
+
+        masterGrid = gameObject.transform.parent.parent.Find("Grid System").GetComponent<MasterGrid>();
     }
 
     // Update is called once per frame
@@ -112,7 +110,8 @@ public class PlayerController : BaseSingleton<PlayerController>
                             {
                                 newItem.xCoord = (int)Mathf.Clamp(mousePos.x, -mapData.getWidth() / 2, mapData.getWidth() / 2);
                                 newItem.yCoord = (int)Mathf.Clamp(mousePos.y, -mapData.getHeight() / 2, mapData.getHeight() / 2);
-                                masterGrid.inventoryArray.Add(newItem);
+                                GameObject tempItem = Instantiate(itemPrefab, new Vector3(newItem.xCoord, newItem.yCoord, 0), Quaternion.identity);
+                                tempItem.transform.SetParent(masterGrid.inventoryManager.transform); 
                             }
                             break;
                     }
@@ -167,7 +166,7 @@ public class PlayerController : BaseSingleton<PlayerController>
                         case 4:             //oxygen
                             break;
                         default:            //0
-                            npcController.spawnEntity((int)mousePos.x, (int)mousePos.y, npcController.prefabDrone);
+                            masterGrid.npcController.spawnEntity((int)mousePos.x, (int)mousePos.y, masterGrid.npcController.prefabDrone);
                             break;
                     }
                 }
@@ -187,12 +186,12 @@ public class PlayerController : BaseSingleton<PlayerController>
                         case 1:             //heat
                             break;
                         case 2:             //access
-                            PathNode startNode = masterGrid.pathfindingGrid.getGridObject(npcController.transform.GetChild(0).position);
+                            PathNode startNode = masterGrid.pathfindingGrid.getGridObject(masterGrid.npcController.transform.GetChild(0).position);
                             PathNode endNode = masterGrid.pathfindingGrid.getGridObject(mousePos);
 
-                            npcController.transform.GetChild(0).GetComponent<BaseEntity>().setTargetPos(mousePos);
+                            masterGrid.npcController.transform.GetChild(0).GetComponent<BaseEntity>().setTargetPos(mousePos);
 
-                            BaseEntity[] allChildren = npcController.transform.GetComponentsInChildren<BaseEntity>();
+                            BaseEntity[] allChildren = masterGrid.npcController.transform.GetComponentsInChildren<BaseEntity>();
                             foreach (BaseEntity child in allChildren)
                             {
                                 child.setTargetPos(mousePos);

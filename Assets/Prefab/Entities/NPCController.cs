@@ -4,7 +4,8 @@ using UnityEngine;
 public class NPCController : MonoBehaviour
 {
     MapData mapData;
-    MasterGrid masterGrid;
+    public MasterGrid masterGrid;
+    public InventoryManager inventoryManager;
 
     public GameObject prefabHuman, prefabDrone;
 
@@ -15,8 +16,9 @@ public class NPCController : MonoBehaviour
     private void Awake()
     {
         mapData = FindObjectOfType<MapData>();
-        masterGrid = transform.parent.GetChild(1).gameObject.GetComponent<MasterGrid>();
-
+        masterGrid = transform.parent.Find("Grid System").gameObject.GetComponent<MasterGrid>();
+        inventoryManager = transform.parent.Find("Inventory Manager").gameObject.GetComponent<InventoryManager>();
+        
         //for (int i = 0; i < 100; i++)
         //{
         //    spawnEntity(prefabDrone);

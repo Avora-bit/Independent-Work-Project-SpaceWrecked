@@ -10,6 +10,9 @@ public class MasterGrid : MonoBehaviour
     private MapData mapData;                //reference to map data
     TimeController timeController;          //reference to time
 
+    public InventoryManager inventoryManager;      //sibling
+    public NPCController npcController;            //sibling
+
     private TextMesh[,] debugTextArray;
     private Mesh mesh;
     private int renderLayer = 0;            //0 for dont render, 1++ according to following arrays
@@ -26,8 +29,6 @@ public class MasterGrid : MonoBehaviour
     private const int MOVE_STRAIGHT_COST = 10;
     private const int MOVE_DIAGONAL_COST = 14;              //sqrt of 10+10
 
-    public List<ItemStat> inventoryArray = new List<ItemStat>();
-
     //able to store prefabs as well as construction blueprints
     public BaseGrid<GameObject> structureArray = new BaseGrid<GameObject>();
     public BaseGrid<GameObject> floorArray = new BaseGrid<GameObject>();
@@ -37,6 +38,9 @@ public class MasterGrid : MonoBehaviour
     {
         mapData = FindObjectOfType<MapData>();
         timeController = FindObjectOfType<TimeController>();
+
+        inventoryManager = transform.parent.Find("Inventory Manager").gameObject.GetComponent<InventoryManager>();
+        npcController = transform.parent.Find("Inventory Manager").gameObject.GetComponent<NPCController>();
 
         //create debug text on grid
         //debugTextArray = new TextMesh[mapData.getWidth(), mapData.getHeight()];
@@ -640,7 +644,7 @@ public class MasterGrid : MonoBehaviour
 
         PathNode startNode = pathfindingGrid.getGridObject(xCoord, yCoord);
 
-        foreach (ItemStat item in inventoryArray)
+        foreach (ItemStat item in inventoryManager.transform)           //ignores non item gameobjects
         {
             if (item.name == name)
             {
