@@ -6,7 +6,7 @@ public class NPCController : MonoBehaviour
     MapData mapData;
     MasterGrid masterGrid;
 
-    [SerializeField] public GameObject prefabHuman, prefabDrone;
+    public GameObject prefabHuman, prefabDrone;
 
     BaseEntity testingNPC;
 
@@ -21,8 +21,8 @@ public class NPCController : MonoBehaviour
         //{
         //    spawnEntity(prefabDrone);
         //}
-        spawnEntity(prefabDrone);
-        testingNPC = transform.GetChild(0).GetComponent<BaseEntity>();
+        //spawnEntity(prefabDrone);
+        //testingNPC = transform.GetChild(0).GetComponent<BaseEntity>();
     }
 
     private void Update()

@@ -371,9 +371,7 @@ public class MasterGrid : MonoBehaviour
                 }
                 else if (arrayType == arrayRadiation || arrayType == arrayOxygen)
                 {
-                    double gridValue = arrayType.getGridObject(x, y);
-                    double gridValueNormalized = gridValue / 100;           //percentage
-                    Vector2 gridValueUV = new Vector2((float)gridValueNormalized, 0);
+                    Vector2 gridValueUV = new Vector2((float)arrayType.getGridObject(x, y) / 100, 0);       //percentage
                     AddQuad(vertices, uv, triangles, index, arrayType.getWorldPos(x, y) + 0.5f * quadSize, quadSize, gridValueUV);
                 }
             }
@@ -463,7 +461,7 @@ public class MasterGrid : MonoBehaviour
         else
         {
             meshRenderer.enabled = true;
-            meshRenderer.material = Resources.Load<Material>("Material/HeatGradient");
+            meshRenderer.material = Resources.Load<Material>("Overlay/HeatGradient");
             updateMeshVisual(arrayHeat);
             renderLayer = 1;
             //for (int x = 0; x < mapData.getWidth(); ++x)
@@ -493,7 +491,7 @@ public class MasterGrid : MonoBehaviour
         else
         {
             meshRenderer.enabled = true;
-            meshRenderer.material = Resources.Load<Material>("Material/Access");
+            meshRenderer.material = Resources.Load<Material>("Overlay/Access");
             updateMeshVisual(pathfindingGrid);                                  //requires update
             renderLayer = 2;
             //for (int x = 0; x < mapData.getWidth(); ++x)
@@ -523,7 +521,7 @@ public class MasterGrid : MonoBehaviour
         else
         {
             meshRenderer.enabled = true;
-            meshRenderer.material = Resources.Load<Material>("Material/RadiationGradient");
+            meshRenderer.material = Resources.Load<Material>("Overlay/RadiationGradient");
             updateMeshVisual(arrayRadiation);                                  //requires update
             renderLayer = 3;
             //for (int x = 0; x < mapData.getWidth(); ++x)
@@ -553,7 +551,7 @@ public class MasterGrid : MonoBehaviour
         else
         {
             meshRenderer.enabled = true;
-            meshRenderer.material = Resources.Load<Material>("Material/OxygenGradient");
+            meshRenderer.material = Resources.Load<Material>("Overlay/OxygenGradient");
             updateMeshVisual(arrayOxygen);                                  //requires update
             renderLayer = 4;
             //for (int x = 0; x < mapData.getWidth(); ++x)

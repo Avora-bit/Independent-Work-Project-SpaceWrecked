@@ -187,7 +187,7 @@ public class BaseEntity : MonoBehaviour
         //reduce needs
 
         //check needs for fulfill
-
+         
         //if needs, set pathfind target
 
         //if no needs, then check for task
@@ -202,7 +202,11 @@ public class BaseEntity : MonoBehaviour
         }
         else
         {
-            //null
+            //get item
+            if (pathVectorList == null)     //start moving only when item is found
+            {
+                setTargetPos(new Vector3(itemPtr.xCoord, itemPtr.yCoord, 0));
+            }
         }
 
         //move to object
@@ -212,17 +216,9 @@ public class BaseEntity : MonoBehaviour
             if (pathVectorList == null)
                 setTargetPos(npcPtr.transform.position);
         }
-        else if (itemPtr != null)
-        {
-            //get item
-            if (pathVectorList == null)     
-            {
-                setTargetPos(new Vector3(itemPtr.xCoord, itemPtr.yCoord, 0));
-            }
-        }
         else
         {
-            //idle
+            //null
         }
 
         

@@ -11,13 +11,13 @@ public class PlayerController : BaseSingleton<PlayerController>
     private MapData mapData;
     private float minPosX, minPosY, maxPosX, maxPosY;
     private MasterGrid masterGrid;
+    private NPCController npcController;
 
     public GameObject followCamTarget = null;
 
     private Vector3 mousePos, screenPos;
     private Vector3 dragLMBstart, dragLMBend;
 
-    private NPCController NPC;
 
     public GameObject itemPrefab;
 
@@ -28,7 +28,7 @@ public class PlayerController : BaseSingleton<PlayerController>
     {
         //assign reference to map size
         mapData = FindAnyObjectByType<MapData>();
-        NPC = transform.parent.parent.GetChild(2).GetComponent<NPCController>();
+        npcController = transform.parent.parent.GetChild(2).GetComponent<NPCController>();
 
         masterGrid = gameObject.transform.parent.parent.GetChild(1).GetComponent<MasterGrid>();
         minPosX = mapData.getOriginPos().x;     //negative
@@ -66,14 +66,28 @@ public class PlayerController : BaseSingleton<PlayerController>
                 else if (b_IsLMB && Input.GetMouseButton(0))       //LMB pressed, exclude first and last frame
                 {
                     dragLMBend = screenPos;
-                    //testGrid.pathfindingGrid.getGridObject(mousePos).isWalkable = false; 
-                    //testGrid.pathfindingGrid.setRebuild(true);
 
-                    //heat
-                    //double temp = Mathf.Clamp((float)masterGrid.arrayHeat.getGridObject(mousePos) + 100, mapData.getMinTemp(), mapData.getMaxTemp());
-                    //masterGrid.arrayHeat.setGridObject(mousePos, temp);
-
-
+                    switch (masterGrid.getRenderLayer())
+                    {
+                        case 1:             //heat
+                            double temp = Mathf.Clamp((float)masterGrid.arrayHeat.getGridObject(mousePos) + 100, mapData.getMinTemp(), mapData.getMaxTemp());
+                            masterGrid.arrayHeat.setGridObject(mousePos, temp);
+                            break;
+                        case 2:             //access
+                            masterGrid.pathfindingGrid.getGridObject(mousePos).isWalkable = false;
+                            masterGrid.pathfindingGrid.setRebuild(true);
+                            break;
+                        case 3:             //radiation
+                            double rads = Mathf.Clamp((float)masterGrid.arrayRadiation.getGridObject(mousePos) + 25, 0, 100);
+                            masterGrid.arrayRadiation.setGridObject(mousePos, rads);
+                            break;
+                        case 4:             //oxygen
+                            double oxygen = Mathf.Clamp((float)masterGrid.arrayOxygen.getGridObject(mousePos) + 25, 0, 100);
+                            masterGrid.arrayOxygen.setGridObject(mousePos, oxygen);
+                            break;
+                        default:            //0
+                            break;
+                    }
                 }
                 else if (b_IsLMB && !Input.GetMouseButton(0))      //LMB up
                 {
@@ -82,18 +96,27 @@ public class PlayerController : BaseSingleton<PlayerController>
 
                     //place item
                     //generate new item stat
-
-                    ItemStat newItem = itemPrefab.GetComponent<ItemStat>();
-                    if (masterGrid.pathfindingGrid.getGridObject(mousePos) != null)
+                    switch (masterGrid.getRenderLayer())
                     {
-                        //newItem.xCoord = masterGrid.pathfindingGrid.getGridObject(mousePos).x;
-                        //newItem.yCoord = masterGrid.pathfindingGrid.getGridObject(mousePos).y;
-                        newItem.xCoord = (int)Mathf.Clamp(mousePos.x, -mapData.getWidth() / 2, mapData.getWidth() / 2);
-                        newItem.yCoord = (int)Mathf.Clamp(mousePos.y, -mapData.getHeight() / 2, mapData.getHeight() / 2);
-                        masterGrid.inventoryArray.Add(newItem);
+                        case 1:             //heat
+                            break;
+                        case 2:             //access
+                            break;
+                        case 3:             //radiation
+                            break;
+                        case 4:             //oxygen
+                            break;
+                        default:            //0
+                            ItemStat newItem = itemPrefab.GetComponent<ItemStat>();
+                            if (masterGrid.pathfindingGrid.getGridObject(mousePos) != null)
+                            {
+                                newItem.xCoord = (int)Mathf.Clamp(mousePos.x, -mapData.getWidth() / 2, mapData.getWidth() / 2);
+                                newItem.yCoord = (int)Mathf.Clamp(mousePos.y, -mapData.getHeight() / 2, mapData.getHeight() / 2);
+                                masterGrid.inventoryArray.Add(newItem);
+                            }
+                            break;
                     }
-
-
+                    
                     dragLMBstart = dragLMBend = Vector3.zero;   //reset the position
                 }
                 else
@@ -108,18 +131,45 @@ public class PlayerController : BaseSingleton<PlayerController>
                 }
                 else if (b_IsRMB && Input.GetMouseButton(1))       //RMB pressed, exclude first and last frame
                 {
-                    //testGrid.pathfindingGrid.getGridObject(mousePos).isWalkable = true;
-                    //testGrid.pathfindingGrid.setRebuild(true);
-
-                    //heat
-                    //double temp = Mathf.Clamp((float)masterGrid.arrayHeat.getGridObject(mousePos) - 100, mapData.getMinTemp(), mapData.getMaxTemp());
-                    //masterGrid.arrayHeat.setGridObject(mousePos, temp);
-
+                    switch (masterGrid.getRenderLayer())
+                    {
+                        case 1:             //heat
+                            double temp = Mathf.Clamp((float)masterGrid.arrayHeat.getGridObject(mousePos) - 100, mapData.getMinTemp(), mapData.getMaxTemp());
+                            masterGrid.arrayHeat.setGridObject(mousePos, temp);
+                            break;
+                        case 2:             //access
+                            masterGrid.pathfindingGrid.getGridObject(mousePos).isWalkable = true;
+                            masterGrid.pathfindingGrid.setRebuild(true);
+                            break;
+                        case 3:             //radiation
+                            double rads = Mathf.Clamp((float)masterGrid.arrayRadiation.getGridObject(mousePos) - 25, 0, 100);
+                            masterGrid.arrayRadiation.setGridObject(mousePos, rads);
+                            break;
+                        case 4:             //oxygen
+                            double oxygen = Mathf.Clamp((float)masterGrid.arrayOxygen.getGridObject(mousePos) - 25, 0, 100);
+                            masterGrid.arrayOxygen.setGridObject(mousePos, oxygen);
+                            break;
+                        default:            //0
+                            break;
+                    }
                 }
                 else if (b_IsRMB && !Input.GetMouseButton(1))      //RMB up
                 {
                     b_IsRMB = false;
-
+                    switch (masterGrid.getRenderLayer())
+                    {
+                        case 1:             //heat
+                            break;
+                        case 2:             //access
+                            break;
+                        case 3:             //radiation
+                            break;
+                        case 4:             //oxygen
+                            break;
+                        default:            //0
+                            npcController.spawnEntity((int)mousePos.x, (int)mousePos.y, npcController.prefabDrone);
+                            break;
+                    }
                 }
                 else
                 {
@@ -132,16 +182,29 @@ public class PlayerController : BaseSingleton<PlayerController>
                 }
                 else if (b_IsMMB && Input.GetMouseButton(2))       //MMB pressed, exclude first and last frame
                 {
-                    //PathNode startNode = testGrid.pathfindingGrid.getGridObject(NPC.transform.GetChild(0).position);
-                    //PathNode endNode = testGrid.pathfindingGrid.getGridObject(mousePos);
+                    switch (masterGrid.getRenderLayer())
+                    {
+                        case 1:             //heat
+                            break;
+                        case 2:             //access
+                            PathNode startNode = masterGrid.pathfindingGrid.getGridObject(npcController.transform.GetChild(0).position);
+                            PathNode endNode = masterGrid.pathfindingGrid.getGridObject(mousePos);
 
-                    //NPC.transform.GetChild(0).GetComponent<BaseEntity>().setTargetPos(mousePos);
+                            npcController.transform.GetChild(0).GetComponent<BaseEntity>().setTargetPos(mousePos);
 
-                    //BaseEntity[] allChildren = NPC.transform.GetComponentsInChildren<BaseEntity>();
-                    //foreach (BaseEntity child in allChildren)
-                    //{
-                    //    child.setTargetPos(mousePos);
-                    //}
+                            BaseEntity[] allChildren = npcController.transform.GetComponentsInChildren<BaseEntity>();
+                            foreach (BaseEntity child in allChildren)
+                            {
+                                child.setTargetPos(mousePos);
+                            }
+                            break;
+                        case 3:             //radiation
+                            break;
+                        case 4:             //oxygen
+                            break;
+                        default:            //0
+                            break;
+                    }
                 }
                 else if (b_IsMMB && !Input.GetMouseButton(2))      //MMB up
                 {
