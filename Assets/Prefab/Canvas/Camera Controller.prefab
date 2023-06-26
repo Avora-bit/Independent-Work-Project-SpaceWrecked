@@ -48,9 +48,10 @@ MonoBehaviour:
   sprintMult: 4
   edgeScrollBuffer: 10
   zoomSpeed: 20
-  minZoom: 15
-  maxZoom: -10
+  minZoom: 20
+  maxZoom: -5
   followCamTarget: {fileID: 0}
+  itemPrefab: {fileID: 0}
 --- !u!1 &8112714992764010172
 GameObject:
   m_ObjectHideFlags: 0

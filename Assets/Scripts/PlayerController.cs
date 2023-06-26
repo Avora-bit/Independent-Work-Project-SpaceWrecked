@@ -83,7 +83,9 @@ public class PlayerController : BaseSingleton<PlayerController>
                             double oxygen = Mathf.Clamp((float)masterGrid.arrayOxygen.getGridObject(mousePos) + 25, 0, 100);
                             masterGrid.arrayOxygen.setGridObject(mousePos, oxygen);
                             break;
-                        default:            //0
+                        default:            //tilemap
+                            //set floor to tile
+                            masterGrid.tilemapGrid.getGridObject(mousePos).setTileType(TileMapObject.TileType.Lab);
                             break;
                     }
                 }
@@ -92,8 +94,6 @@ public class PlayerController : BaseSingleton<PlayerController>
                     b_IsLMB = false;
                     //dragLMBstart, dragLMBend
 
-                    //place item
-                    //generate new item stat
                     switch (masterGrid.getRenderLayer())
                     {
                         case 1:             //heat
@@ -104,15 +104,16 @@ public class PlayerController : BaseSingleton<PlayerController>
                             break;
                         case 4:             //oxygen
                             break;
-                        default:            //0
-                            ItemStat newItem = itemPrefab.GetComponent<ItemStat>();
-                            if (masterGrid.pathfindingGrid.getGridObject(mousePos) != null)
-                            {
-                                newItem.xCoord = (int)Mathf.Clamp(mousePos.x, -mapData.getWidth() / 2, mapData.getWidth() / 2);
-                                newItem.yCoord = (int)Mathf.Clamp(mousePos.y, -mapData.getHeight() / 2, mapData.getHeight() / 2);
-                                GameObject tempItem = Instantiate(itemPrefab, new Vector3(newItem.xCoord, newItem.yCoord, 0), Quaternion.identity);
-                                tempItem.transform.SetParent(masterGrid.inventoryManager.transform); 
-                            }
+                        default:            //tilemap
+                            //spawn new item
+                            //ItemStat newItem = itemPrefab.GetComponent<ItemStat>();
+                            //if (masterGrid.pathfindingGrid.getGridObject(mousePos) != null)
+                            //{
+                            //    newItem.xCoord = (int)Mathf.Clamp(mousePos.x, -mapData.getWidth() / 2, mapData.getWidth() / 2);
+                            //    newItem.yCoord = (int)Mathf.Clamp(mousePos.y, -mapData.getHeight() / 2, mapData.getHeight() / 2);
+                            //    GameObject tempItem = Instantiate(itemPrefab, new Vector3(newItem.xCoord, newItem.yCoord, 0), Quaternion.identity);
+                            //    tempItem.transform.SetParent(masterGrid.inventoryManager.transform); 
+                            //}
                             break;
                     }
                     
@@ -148,7 +149,9 @@ public class PlayerController : BaseSingleton<PlayerController>
                             double oxygen = Mathf.Clamp((float)masterGrid.arrayOxygen.getGridObject(mousePos) - 25, 0, 100);
                             masterGrid.arrayOxygen.setGridObject(mousePos, oxygen);
                             break;
-                        default:            //0
+                        default:            //tilemap
+                            //set floor to checkered
+                            masterGrid.tilemapGrid.getGridObject(mousePos).setTileType(TileMapObject.TileType.Kitchen);
                             break;
                     }
                 }
@@ -165,8 +168,9 @@ public class PlayerController : BaseSingleton<PlayerController>
                             break;
                         case 4:             //oxygen
                             break;
-                        default:            //0
-                            masterGrid.npcController.spawnEntity((int)mousePos.x, (int)mousePos.y, masterGrid.npcController.prefabDrone);
+                        default:            //tilemap
+                            //spawn new NPC
+                            //masterGrid.npcController.spawnEntity((int)mousePos.x, (int)mousePos.y, masterGrid.npcController.prefabDrone);
                             break;
                     }
                 }

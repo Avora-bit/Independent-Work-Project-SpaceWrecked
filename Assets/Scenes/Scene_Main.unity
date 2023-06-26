@@ -203,6 +203,14 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
     - target: {fileID: 1506000304373279570, guid: 391345d79c21709469584ba3fba7c795, type: 3}
+      propertyPath: maxZoom
+      value: -15
+      objectReference: {fileID: 0}
+    - target: {fileID: 1506000304373279570, guid: 391345d79c21709469584ba3fba7c795, type: 3}
+      propertyPath: minZoom
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 1506000304373279570, guid: 391345d79c21709469584ba3fba7c795, type: 3}
       propertyPath: itemPrefab
       value: 
       objectReference: {fileID: 2056124641140046948, guid: f2d480916ee775c45a04a2583eea7ee4, type: 3}
@@ -269,6 +277,10 @@ PrefabInstance:
     - target: {fileID: 5100858758278897292, guid: 391345d79c21709469584ba3fba7c795, type: 3}
       propertyPath: m_LocalPosition.z
       value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 7073937395188021737, guid: 391345d79c21709469584ba3fba7c795, type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7991193239129605152, guid: 391345d79c21709469584ba3fba7c795, type: 3}
       propertyPath: m_RootOrder

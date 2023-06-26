@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEditor.PlayerSettings;
 
 public class MasterGrid : MonoBehaviour
 {
@@ -15,8 +17,12 @@ public class MasterGrid : MonoBehaviour
 
     private TextMesh[,] debugTextArray;
     private Mesh mesh;
+    private MeshRenderer meshRenderer;
+
+    //child object, overlay renderer
+    private Mesh overlayMesh;
+    private MeshRenderer overlayMeshRenderer;
     private int renderLayer = 0;            //0 for dont render, 1++ according to following arrays
-    MeshRenderer meshRenderer;
 
     public BaseGrid<double> arrayHeat = new BaseGrid<double>();
     public BaseGrid<double> arrayRadiation = new BaseGrid<double>();
@@ -28,6 +34,23 @@ public class MasterGrid : MonoBehaviour
     private HashSet<PathNode> closedList;           //generic hashset to check if it contains neighbour
     private const int MOVE_STRAIGHT_COST = 10;
     private const int MOVE_DIAGONAL_COST = 14;              //sqrt of 10+10
+
+    [Serializable]
+    public struct TileMapSpriteUV
+    {
+        public TileMapObject.TileType tileType;
+        public Vector2Int uv00Pixel;
+        public Vector2Int uv11Pixel;
+    }
+
+    private struct UVCoords
+    {
+        public Vector2 uv00;
+        public Vector2 uv11;
+    }
+    public BaseGrid<TileMapObject> tilemapGrid = new BaseGrid<TileMapObject>();
+    [SerializeField] TileMapSpriteUV[] tileMapSpriteUVArray;
+    private Dictionary<TileMapObject.TileType, UVCoords> dictUVCoords;
 
     //able to store prefabs as well as construction blueprints
     public BaseGrid<GameObject> structureArray = new BaseGrid<GameObject>();
@@ -55,16 +78,34 @@ public class MasterGrid : MonoBehaviour
         //    }
         //}
 
-        //create visual overlay mesh
+        //tile mesh
         meshRenderer = GetComponent<MeshRenderer>();
         mesh = new Mesh();
         GetComponent<MeshFilter>().mesh = mesh;
+
+        Texture texture = GetComponent<MeshRenderer>().material.mainTexture;
+        float tWidth = texture.width; 
+        float tHeight = texture.height; 
+        dictUVCoords = new Dictionary<TileMapObject.TileType, UVCoords>();
+        foreach (TileMapSpriteUV spriteUV in tileMapSpriteUVArray)
+        {
+            dictUVCoords[spriteUV.tileType] = new UVCoords {
+                uv00 = new Vector2(spriteUV.uv00Pixel.x / tWidth, spriteUV.uv00Pixel.y / tHeight),
+                uv11 = new Vector2(spriteUV.uv11Pixel.x / tWidth, spriteUV.uv11Pixel.y / tHeight),
+            };
+        }
+
+        //overlay renderer
+        tilemapGrid.generateGrid(mapData, (tileMap, x, y) => new TileMapObject(tileMap, x, y));
+        overlayMeshRenderer = transform.GetChild(0).GetComponent<MeshRenderer>();
+        overlayMesh = new Mesh();
+        transform.GetChild(0).GetComponent<MeshFilter>().mesh = overlayMesh;
 
         //create grids with data type
         arrayHeat.generateGrid(mapData, (arrayHeat, x, y) => -300);
         arrayRadiation.generateGrid(mapData, (arrayHeat, x, y) => 0);
         arrayOxygen.generateGrid(mapData, (arrayOxygen, x, y) => 0);
-        pathfindingGrid.generateGrid(mapData, (pathfindingGrid, x, y) => new PathNode(pathfindingGrid, x, y));             //prove that generics accept custom game objects
+        pathfindingGrid.generateGrid(mapData, (pathfindingGrid, x, y) => new PathNode(pathfindingGrid, x, y));
     }
 
     public List<Vector3> findVectorPath(Vector3 startPos, Vector3 endPos)
@@ -224,7 +265,12 @@ public class MasterGrid : MonoBehaviour
         {
             arrayOxygen.setRebuild(diffuse(arrayOxygen));
         }
-
+        //tilemapGrid
+        //always render the base tile mesh, only rebuild when updated
+        if (tilemapGrid.getRebuild())
+        {
+            updateMeshVisual(tilemapGrid);
+        }
         //only rebuild mesh if both render and rebuild is true
         switch (renderLayer)
         {
@@ -286,6 +332,41 @@ public class MasterGrid : MonoBehaviour
 
     }
 
+    //tile map, base render
+    public void updateMeshVisual(BaseGrid<TileMapObject> arrayType)
+    {
+        CreateEmptyMeshData(mapData.getWidth() * mapData.getHeight(),
+            out Vector3[] vertices, out Vector2[] uv, out int[] triangles);
+
+        for (int x = 0; x < mapData.getWidth(); x++)
+        {
+            for (int y = 0; y < mapData.getHeight(); y++)
+            {
+                int index = x * mapData.getHeight() + y;
+                Vector3 quadSize = new Vector3(1, 1) * mapData.getCellSize();
+
+                TileMapObject gridObject = tilemapGrid.getGridObject(x, y);
+                TileMapObject.TileType tileType = gridObject.getTileType();
+                Vector2 UV00 = Vector2.zero, UV11 = Vector2.zero;
+                if (tileType == TileMapObject.TileType.None)
+                {
+                    quadSize = Vector3.zero;
+                }
+                else
+                {
+                    UVCoords uvCoords = dictUVCoords[tileType];
+                    UV00 = uvCoords.uv00;
+                    UV11 = uvCoords.uv11;
+                }
+                AddQuad(vertices, uv, triangles, index, tilemapGrid.getWorldPos(x, y) + 0.5f * quadSize, quadSize, UV00, UV11);
+
+            }
+        }
+        mesh.vertices = vertices;
+        mesh.uv = uv;
+        mesh.triangles = triangles;
+    }
+
     //debug
     public static TextMesh createWorldText(string text = "null", Transform parent = null, Vector3 localPosition = default(Vector3), int sortingOrder = 0)
     {
@@ -325,9 +406,9 @@ public class MasterGrid : MonoBehaviour
                 //}
             }
         }
-        mesh.vertices = vertices;
-        mesh.uv = uv;
-        mesh.triangles = triangles;
+        overlayMesh.vertices = vertices;
+        overlayMesh.uv = uv;
+        overlayMesh.triangles = triangles;
     }
     public void updateMeshVisual(BaseGrid<float> arrayType)
     {
@@ -350,9 +431,9 @@ public class MasterGrid : MonoBehaviour
                 //}
             }
         }
-        mesh.vertices = vertices;
-        mesh.uv = uv;
-        mesh.triangles = triangles;
+        overlayMesh.vertices = vertices;
+        overlayMesh.uv = uv;
+        overlayMesh.triangles = triangles;
     }
     public void updateMeshVisual(BaseGrid<double> arrayType)
     {
@@ -380,9 +461,9 @@ public class MasterGrid : MonoBehaviour
                 }
             }
         }
-        mesh.vertices = vertices;
-        mesh.uv = uv;
-        mesh.triangles = triangles;
+        overlayMesh.vertices = vertices;
+        overlayMesh.uv = uv;
+        overlayMesh.triangles = triangles;
     }
     public void updateMeshVisual(BaseGrid<PathNode> arrayType)
     {
@@ -415,22 +496,42 @@ public class MasterGrid : MonoBehaviour
 
             }
         }
-        mesh.vertices = vertices;
-        mesh.uv = uv;
-        mesh.triangles = triangles;
+        overlayMesh.vertices = vertices;
+        overlayMesh.uv = uv;
+        overlayMesh.triangles = triangles;
     }
 
-    private void AddQuad(Vector3[] vertices, Vector2[] uvs, int[] triangles, int index, Vector3 GridPos, Vector3 QuadSize, Vector2 Uv)
+    private void AddQuad(Vector3[] vertices, Vector2[] uvs, int[] triangles, int index, Vector3 GridPos, Vector3 QuadSize, Vector2 uv)
     {
         vertices[index * 4] = new Vector3((-0.5f + GridPos.x) * QuadSize.x, (-0.5f + GridPos.y) * QuadSize.y);
         vertices[(index * 4) + 1] = new Vector3((-0.5f + GridPos.x) * QuadSize.x, (+0.5f + GridPos.y) * QuadSize.y);
         vertices[(index * 4) + 2] = new Vector3((+0.5f + GridPos.x) * QuadSize.x, (+0.5f + GridPos.y) * QuadSize.y);
         vertices[(index * 4) + 3] = new Vector3((+0.5f + GridPos.x) * QuadSize.x, (-0.5f + GridPos.y) * QuadSize.y);
 
-        uvs[(index * 4)] = Uv;
-        uvs[(index * 4) + 1] = Uv;
-        uvs[(index * 4) + 2] = Uv;
-        uvs[(index * 4) + 3] = Uv;
+        uvs[(index * 4)] = uv;
+        uvs[(index * 4) + 1] = uv;
+        uvs[(index * 4) + 2] = uv;
+        uvs[(index * 4) + 3] = uv;
+
+        triangles[(index * 6) + 0] = (index * 4) + 0;
+        triangles[(index * 6) + 1] = (index * 4) + 1;
+        triangles[(index * 6) + 2] = (index * 4) + 2;
+        triangles[(index * 6) + 3] = (index * 4) + 2;
+        triangles[(index * 6) + 4] = (index * 4) + 3;
+        triangles[(index * 6) + 5] = (index * 4) + 0;
+    }
+    private void AddQuad(Vector3[] vertices, Vector2[] uvs, int[] triangles, int index, Vector3 GridPos, Vector3 QuadSize, Vector2 uv00, Vector2 uv11)
+    {
+        //overloaded function to show texture like a sprite atlas
+        vertices[index * 4] = new Vector3((-0.5f + GridPos.x) * QuadSize.x, (-0.5f + GridPos.y) * QuadSize.y);
+        vertices[(index * 4) + 1] = new Vector3((-0.5f + GridPos.x) * QuadSize.x, (+0.5f + GridPos.y) * QuadSize.y);
+        vertices[(index * 4) + 2] = new Vector3((+0.5f + GridPos.x) * QuadSize.x, (+0.5f + GridPos.y) * QuadSize.y);
+        vertices[(index * 4) + 3] = new Vector3((+0.5f + GridPos.x) * QuadSize.x, (-0.5f + GridPos.y) * QuadSize.y);
+
+        uvs[(index * 4)] = new Vector2(uv00.x, uv11.y);
+        uvs[(index * 4) + 1] = new Vector2(uv00.x, uv00.y);
+        uvs[(index * 4) + 2] = new Vector2(uv11.x, uv00.y);
+        uvs[(index * 4) + 3] = new Vector2(uv11.x, uv11.y);
 
         triangles[(index * 6) + 0] = (index * 4) + 0;
         triangles[(index * 6) + 1] = (index * 4) + 1;
@@ -452,7 +553,7 @@ public class MasterGrid : MonoBehaviour
     {
         if (renderLayer == 1)
         {
-            meshRenderer.enabled = false;
+            overlayMeshRenderer.enabled = false;
             renderLayer = 0;
             //for (int x = 0; x < mapData.getWidth(); ++x)
             //{
@@ -464,8 +565,8 @@ public class MasterGrid : MonoBehaviour
         }
         else
         {
-            meshRenderer.enabled = true;
-            meshRenderer.material = Resources.Load<Material>("Overlay/HeatGradient");
+            overlayMeshRenderer.enabled = true;
+            overlayMeshRenderer.material = Resources.Load<Material>("Overlay/HeatGradient");
             updateMeshVisual(arrayHeat);
             renderLayer = 1;
             //for (int x = 0; x < mapData.getWidth(); ++x)
@@ -482,7 +583,7 @@ public class MasterGrid : MonoBehaviour
     {
         if (renderLayer == 2)
         {
-            meshRenderer.enabled = false;
+            overlayMeshRenderer.enabled = false;
             renderLayer = 0;
             //for (int x = 0; x < mapData.getWidth(); ++x)
             //{
@@ -494,8 +595,8 @@ public class MasterGrid : MonoBehaviour
         }
         else
         {
-            meshRenderer.enabled = true;
-            meshRenderer.material = Resources.Load<Material>("Overlay/Access");
+            overlayMeshRenderer.enabled = true;
+            overlayMeshRenderer.material = Resources.Load<Material>("Overlay/Access");
             updateMeshVisual(pathfindingGrid);                                  //requires update
             renderLayer = 2;
             //for (int x = 0; x < mapData.getWidth(); ++x)
@@ -512,7 +613,7 @@ public class MasterGrid : MonoBehaviour
     {
         if (renderLayer == 3)
         {
-            meshRenderer.enabled = false;
+            overlayMeshRenderer.enabled = false;
             renderLayer = 0;
             //for (int x = 0; x < mapData.getWidth(); ++x)
             //{
@@ -524,8 +625,8 @@ public class MasterGrid : MonoBehaviour
         }
         else
         {
-            meshRenderer.enabled = true;
-            meshRenderer.material = Resources.Load<Material>("Overlay/RadiationGradient");
+            overlayMeshRenderer.enabled = true;
+            overlayMeshRenderer.material = Resources.Load<Material>("Overlay/RadiationGradient");
             updateMeshVisual(arrayRadiation);                                  //requires update
             renderLayer = 3;
             //for (int x = 0; x < mapData.getWidth(); ++x)
@@ -542,7 +643,7 @@ public class MasterGrid : MonoBehaviour
     {
         if (renderLayer == 4)
         {
-            meshRenderer.enabled = false;
+            overlayMeshRenderer.enabled = false;
             renderLayer = 0;
             //for (int x = 0; x < mapData.getWidth(); ++x)
             //{
@@ -554,8 +655,8 @@ public class MasterGrid : MonoBehaviour
         }
         else
         {
-            meshRenderer.enabled = true;
-            meshRenderer.material = Resources.Load<Material>("Overlay/OxygenGradient");
+            overlayMeshRenderer.enabled = true;
+            overlayMeshRenderer.material = Resources.Load<Material>("Overlay/OxygenGradient");
             updateMeshVisual(arrayOxygen);                                  //requires update
             renderLayer = 4;
             //for (int x = 0; x < mapData.getWidth(); ++x)
