@@ -76,6 +76,8 @@ public class BaseEntity : MonoBehaviour
     private int equipHead, equipOuterwear, equipChest, equipInnerwear, equipPants;
     private int equipDrone, equipUtility, equipTool;
 
+    private bool canFly = false;            //ie equipped jetpack
+
     // Inventory
     private int currInventorySize, maxInventorySize;
     private int[] InventoryItems;                           //pointer list to all items in inventory
@@ -148,7 +150,7 @@ public class BaseEntity : MonoBehaviour
     public void setTargetPos(Vector3 targetPos)
     {
         currentPathIndex = 0;
-        pathVectorList = mapInstance.findVectorPath(transform.position, targetPos);
+        pathVectorList = mapInstance.findVectorPath(transform.position, targetPos, canFly);
 
         if (pathVectorList != null && pathVectorList.Count > 1) pathVectorList.RemoveAt(0);     //remove self position
     }
@@ -198,7 +200,7 @@ public class BaseEntity : MonoBehaviour
         if (itemPtr == null)
         {
             Debug.Log("waiting for item");
-            itemPtr = mapInstance.findNearest((int)transform.position.x, (int)transform.position.y, "Aluminium");
+            itemPtr = mapInstance.findNearest((int)transform.position.x, (int)transform.position.y, "Aluminium", canFly);
         }
         else
         {

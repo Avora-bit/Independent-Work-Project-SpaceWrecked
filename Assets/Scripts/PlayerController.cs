@@ -72,7 +72,7 @@ public class PlayerController : BaseSingleton<PlayerController>
                             masterGrid.arrayHeat.setGridObject(mousePos, temp);
                             break;
                         case 2:             //access
-                            masterGrid.pathfindingGrid.getGridObject(mousePos).isWalkable = false;
+                            masterGrid.pathfindingGrid.getGridObject(mousePos).isSolid = true;
                             masterGrid.pathfindingGrid.setRebuild(true);
                             break;
                         case 3:             //radiation
@@ -138,7 +138,7 @@ public class PlayerController : BaseSingleton<PlayerController>
                             masterGrid.arrayHeat.setGridObject(mousePos, temp);
                             break;
                         case 2:             //access
-                            masterGrid.pathfindingGrid.getGridObject(mousePos).isWalkable = true;
+                            masterGrid.pathfindingGrid.getGridObject(mousePos).isSolid = false;
                             masterGrid.pathfindingGrid.setRebuild(true);
                             break;
                         case 3:             //radiation

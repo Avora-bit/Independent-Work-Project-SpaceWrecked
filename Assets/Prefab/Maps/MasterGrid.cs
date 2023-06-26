@@ -15,7 +15,7 @@ public class MasterGrid : MonoBehaviour
     public InventoryManager inventoryManager;      //sibling
     public NPCController npcController;            //sibling
 
-    private TextMesh[,] debugTextArray;
+    //ground renderer
     private Mesh mesh;
     private MeshRenderer meshRenderer;
 
@@ -65,19 +65,6 @@ public class MasterGrid : MonoBehaviour
         inventoryManager = transform.parent.Find("Inventory Manager").gameObject.GetComponent<InventoryManager>();
         npcController = transform.parent.Find("Inventory Manager").gameObject.GetComponent<NPCController>();
 
-        //create debug text on grid
-        //debugTextArray = new TextMesh[mapData.getWidth(), mapData.getHeight()];
-        //for (int x = 0; x < mapData.getWidth(); ++x)
-        //{
-        //    for (int y = 0; y < mapData.getHeight(); ++y)
-        //    {
-        //        debugTextArray[x, y] = createWorldText("0", gameObject.transform, mapData.getOriginPos() +
-        //            new Vector3(mapData.getCellSize() * x, mapData.getCellSize() * y, 0) +
-        //            new Vector3(mapData.getCellSize() / 2, mapData.getCellSize() / 2, 0));
-        //        debugTextArray[x, y].gameObject.SetActive(false);
-        //    }
-        //}
-
         //tile mesh
         meshRenderer = GetComponent<MeshRenderer>();
         mesh = new Mesh();
@@ -108,9 +95,9 @@ public class MasterGrid : MonoBehaviour
         pathfindingGrid.generateGrid(mapData, (pathfindingGrid, x, y) => new PathNode(pathfindingGrid, x, y));
     }
 
-    public List<Vector3> findVectorPath(Vector3 startPos, Vector3 endPos)
+    public List<Vector3> findVectorPath(Vector3 startPos, Vector3 endPos, bool canFly)
     {
-        List<PathNode> path = findPath(pathfindingGrid.getGridObject(startPos), pathfindingGrid.getGridObject(endPos));
+        List<PathNode> path = findPath(pathfindingGrid.getGridObject(startPos), pathfindingGrid.getGridObject(endPos), canFly);
         if (path != null)
         {
             List<Vector3> vectorPath = new List<Vector3>();
@@ -128,14 +115,10 @@ public class MasterGrid : MonoBehaviour
         }
         return null;        //path is null
     }
-    public List<PathNode> findPath(PathNode startnode, PathNode endnode)
+    public List<PathNode> findPath(PathNode startnode, PathNode endnode, bool canFly)
     {
-        if (endnode == null)
-        {
-            Debug.Log("endnode null");
-        }
-
-        if (startnode == null || endnode == null || !endnode.isWalkable) return null;
+        if (startnode == null || endnode == null || startnode.isSolid || endnode.isSolid) return null;
+        if ((startnode.isSpace || endnode.isSpace) && !canFly) return null;                                //if in space and cannot fly, then break
         //prevents if location nodes are outside the map, or if the end node is solid
         //add another check for access array
 
@@ -154,7 +137,7 @@ public class MasterGrid : MonoBehaviour
             }
         }
 
-        startnode.costG = 0;        //starting node, cost = 0
+        startnode.costG = 0;        //starting node, current cost = 0
         startnode.costH = calculateDistance(startnode, endnode);
         startnode.calculateCostF();
 
@@ -167,14 +150,15 @@ public class MasterGrid : MonoBehaviour
             foreach (PathNode neighbourNode in getNeighbours(currNode))
             {
                 if (closedList.Contains(neighbourNode)) continue;
-                if (!neighbourNode.isWalkable) { closedList.Add(neighbourNode); continue; }
+                //if node is solid, or is in space and cannot fly, then ignore the node and add it to closed list
+                if (neighbourNode.isSolid || (neighbourNode.isSpace && !canFly)) { closedList.Add(neighbourNode); continue; }
                 //diagonal movement check;
                 if (calculateDistance(currNode, neighbourNode) == MOVE_DIAGONAL_COST)           //check if this is diagonal
                 {
                     int dirX = neighbourNode.x - currNode.x;
                     int dirY = neighbourNode.y - currNode.y;
-                    if (!pathfindingGrid.getGridObject(currNode.x + dirX, currNode.y).isWalkable &&
-                        !pathfindingGrid.getGridObject(currNode.x, currNode.y + dirY).isWalkable) continue;     //ignore
+                    if (pathfindingGrid.getGridObject(currNode.x + dirX, currNode.y).isSolid &&
+                        pathfindingGrid.getGridObject(currNode.x, currNode.y + dirY).isSolid) continue;     //ignore
                 }
 
                 int tempCostG = currNode.costG + calculateDistance(currNode, neighbourNode) + neighbourNode.costPenalty;
@@ -243,10 +227,11 @@ public class MasterGrid : MonoBehaviour
         return Neighbours;
     }
 
-    private int getTotalCost(PathNode startnode, PathNode endnode)
+    private int getTotalCost(PathNode startnode, PathNode endnode, bool canFly)
     {
-        findPath(startnode, endnode);
-        return endnode.costG;
+        if (findPath(startnode, endnode, canFly) != null) return endnode.costG;
+        //path is null
+        return int.MaxValue;
         //the last node's costG, should be the total cost of the journey
     }
 
@@ -265,6 +250,7 @@ public class MasterGrid : MonoBehaviour
         {
             arrayOxygen.setRebuild(diffuse(arrayOxygen));
         }
+
         //tilemapGrid
         //always render the base tile mesh, only rebuild when updated
         if (tilemapGrid.getRebuild())
@@ -278,50 +264,28 @@ public class MasterGrid : MonoBehaviour
                 //heat visual
                 if (arrayHeat.getRebuild())
                 {
-                    //for (int x = 0; x < mapData.getWidth(); ++x)
-                    //{
-                    //    for (int y = 0; y < mapData.getHeight(); ++y)
-                    //    {
-                    //        debugTextArray[x, y].text = ((int)arrayHeat.getGridObject(x, y)).ToString();
-                    //    }
-                    //}
                     updateMeshVisual(arrayHeat);
                 }
                 break;
             case 2:
                 //access visual
                 if (pathfindingGrid.getRebuild())
-                {                             //hardcoded
-                    //for (int x = 0; x < mapData.getWidth(); ++x) {
-                    //    for (int y = 0; y < mapData.getHeight(); ++y) {
-                    //        debugTextArray[x, y].text = pathfindingGrid.getGridObject(x, y).ToString();
-                    //    }
-                    //}
+                {
                     updateMeshVisual(pathfindingGrid);
                     pathfindingGrid.setRebuild(false);
                 }
                 break;
             case 3:
                 //radiation visual
-                if (arrayRadiation.getRebuild())
-                {                             //hardcoded
-                    //for (int x = 0; x < mapData.getWidth(); ++x) {
-                    //    for (int y = 0; y < mapData.getHeight(); ++y) {
-                    //        debugTextArray[x, y].text = arrayRadiation.getGridObject(x, y).ToString();
-                    //    }
-                    //}
+                if (arrayRadiation.getRebuild()) 
+                {
                     updateMeshVisual(arrayRadiation);
                 }
                 break;
             case 4:
                 //oxygen visual
                 if (arrayOxygen.getRebuild())
-                {                             //hardcoded
-                    //for (int x = 0; x < mapData.getWidth(); ++x) {
-                    //    for (int y = 0; y < mapData.getHeight(); ++y) {
-                    //        debugTextArray[x, y].text = arrayRadiation.getGridObject(x, y).ToString();
-                    //    }
-                    //}
+                {
                     updateMeshVisual(arrayOxygen);
                 }
                 break;
@@ -479,9 +443,10 @@ public class MasterGrid : MonoBehaviour
 
                 if (arrayType == pathfindingGrid)
                 {
-                    bool walkable = pathfindingGrid.getGridObject(x, y).isWalkable;
-                    if (walkable)
+                    bool isSolid = pathfindingGrid.getGridObject(x, y).isSolid;
+                    if (!isSolid)
                     {
+                        //walkable
                         int access = pathfindingGrid.getGridObject(x, y).accessLayer;
                         Vector2 gridValueUV = new Vector2(access / 7f, 0f);
                         AddQuad(vertices, uv, triangles, index, pathfindingGrid.getWorldPos(x, y) + 0.5f * quadSize, quadSize, gridValueUV);
@@ -738,7 +703,7 @@ public class MasterGrid : MonoBehaviour
     }
 
     //inventory
-    public ItemStat findNearest(int xCoord, int yCoord, string name)           //brute force
+    public ItemStat findNearest(int xCoord, int yCoord, string name, bool canFly)           //brute force
     {
         ItemStat nearestItem = null;                //comparison pointer
         int cost = int.MaxValue;                    //max cost to compare smaller values
@@ -750,7 +715,7 @@ public class MasterGrid : MonoBehaviour
             if (item.name == name)
             {
                 PathNode endNode = pathfindingGrid.getGridObject(new Vector3(item.xCoord, item.yCoord, 0));     //convert world position to vector to call overloaded function
-                int itemCost = getTotalCost(startNode, endNode);            //pathfind to location, get cost
+                int itemCost = getTotalCost(startNode, endNode, canFly);            //pathfind to location, get cost
                 //cost based comparison
                 if (itemCost < cost)
                 {
