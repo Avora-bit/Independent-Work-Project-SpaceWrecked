@@ -7,7 +7,7 @@ public class NPCController : MonoBehaviour
     public MasterGrid masterGrid;
     public InventoryManager inventoryManager;
 
-    public GameObject prefabHuman, prefabDrone;
+    public GameObject prefabHuman, prefabMech, prefabDrone;
 
     BaseEntity testingNPC;
 

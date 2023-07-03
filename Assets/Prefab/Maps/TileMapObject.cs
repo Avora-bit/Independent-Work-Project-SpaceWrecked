@@ -12,7 +12,7 @@ public class TileMapObject
     }
 
      BaseGrid<TileMapObject> grid;            //reference to the overall grid
-     int x, y;
+     public int x, y;
      TileType tileType = TileType.None;
 
     LooseObject looseObject;

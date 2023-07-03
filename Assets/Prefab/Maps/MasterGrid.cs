@@ -10,14 +10,12 @@ public class MasterGrid : MonoBehaviour
     //this allows for the grid to reuse code and reduce update
 
     private MapData mapData;                //reference to map data
-    TimeController timeController;          //reference to time
 
     public InventoryManager inventoryManager;      //sibling
     public NPCController npcController;            //sibling
 
     //ground renderer
     private Mesh mesh;
-    private MeshRenderer meshRenderer;
 
     //child object, overlay renderer
     private Mesh overlayMesh;
@@ -60,13 +58,11 @@ public class MasterGrid : MonoBehaviour
     void Awake()
     {
         mapData = FindObjectOfType<MapData>();
-        timeController = FindObjectOfType<TimeController>();
 
         inventoryManager = transform.parent.Find("Inventory Manager").gameObject.GetComponent<InventoryManager>();
-        npcController = transform.parent.Find("Inventory Manager").gameObject.GetComponent<NPCController>();
+        npcController = transform.parent.Find("NPC Controller").gameObject.GetComponent<NPCController>();
 
         //tile mesh
-        meshRenderer = GetComponent<MeshRenderer>();
         mesh = new Mesh();
         GetComponent<MeshFilter>().mesh = mesh;
 
@@ -703,20 +699,21 @@ public class MasterGrid : MonoBehaviour
     }
 
     //inventory
-    public ItemStat findNearest(int xCoord, int yCoord, string name, bool canFly)           //brute force
+    public ItemStat findNearest(Vector3 coord, string name, bool canFly)           //brute force
     {
         ItemStat nearestItem = null;                //comparison pointer
         int cost = int.MaxValue;                    //max cost to compare smaller values
 
-        PathNode startNode = pathfindingGrid.getGridObject(xCoord, yCoord);
+        PathNode startNode = pathfindingGrid.getGridObject(coord);
 
-        foreach (ItemStat item in inventoryManager.transform)           //ignores non item gameobjects
+        foreach (Transform child in inventoryManager.transform)           //ignores non item gameobjects
         {
-            if (item.name == name)
+            ItemStat item = child.GetComponent<ItemStat>();
+            if (item && item.name == name)
             {
-                PathNode endNode = pathfindingGrid.getGridObject(new Vector3(item.xCoord, item.yCoord, 0));     //convert world position to vector to call overloaded function
+                PathNode endNode = pathfindingGrid.getGridObject(child.position);          //convert world position to vector to call overloaded function
                 int itemCost = getTotalCost(startNode, endNode, canFly);            //pathfind to location, get cost
-                //cost based comparison
+                                                                                    //cost based comparison
                 if (itemCost < cost)
                 {
                     cost = itemCost;

@@ -44,5 +44,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0b58e661d899b054e94b9d14b5890425, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  masterGrid: {fileID: 0}
+  inventoryManager: {fileID: 0}
   prefabHuman: {fileID: 1323635414563334316, guid: 533916a4f9e5ec647ab719ce09cbb222, type: 3}
-  prefabDrone: {fileID: 1323635414563334316, guid: 546305aaf477a7e44b1dfcc0e0c89203, type: 3}
+  prefabMech: {fileID: 1323635414563334316, guid: 546305aaf477a7e44b1dfcc0e0c89203, type: 3}
+  prefabDrone: {fileID: 1323635414563334316, guid: 87a563131db3ff7469a3c704f8c79176, type: 3}
+  taskList: []

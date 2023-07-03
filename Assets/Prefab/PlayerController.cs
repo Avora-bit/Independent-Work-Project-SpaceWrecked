@@ -1,5 +1,9 @@
+using System;
+using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using static UnityEngine.EventSystems.EventTrigger;
 
 public class PlayerController : BaseSingleton<PlayerController>
 {
@@ -12,16 +16,21 @@ public class PlayerController : BaseSingleton<PlayerController>
     private float minPosX, minPosY, maxPosX, maxPosY;
     private MasterGrid masterGrid;
 
+    [SerializeField] private GameObject cursor;
+    private List<GameObject> dragHintList;
+    public GameObject BuildHintPrefab;
+    public GameObject BlueprintPrefab;
+
     public GameObject followCamTarget = null;
 
     private Vector3 mousePos, screenPos;
     private Vector3 dragLMBstart, dragLMBend;
 
-
     public GameObject itemPrefab;
 
-
     private bool b_IsLMB = false, b_IsRMB = false, b_IsMMB = false;
+
+    private Vector3 offsets;
 
     private void Awake()
     {
@@ -33,13 +42,15 @@ public class PlayerController : BaseSingleton<PlayerController>
         maxPosY = -mapData.getOriginPos().y;
 
         masterGrid = gameObject.transform.parent.parent.Find("Grid System").GetComponent<MasterGrid>();
+        offsets = mapData.getOriginPos() + new Vector3(mapData.getCellSize() / 2, mapData.getCellSize() / 2, 0);
+
+        dragHintList = new List<GameObject>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (minPosX == maxPosX && minPosY == maxPosY)           //primitive bounds lock since min and max pos should not be equal,
-                                                                //should be replaced with screen loading to ensure managers are created before controllers
+        if (minPosX == maxPosX && minPosY == maxPosY)
         {
             minPosX = mapData.getOriginPos().x;
             minPosY = mapData.getOriginPos().y;
@@ -53,17 +64,36 @@ public class PlayerController : BaseSingleton<PlayerController>
             screenPos.z -= Camera.main.transform.position.z;
             mousePos = Camera.main.ScreenToWorldPoint(screenPos);
 
+            if (masterGrid.pathfindingGrid.getGridObject(mousePos) != null)
+            {
+                cursor.SetActive(true);
+                cursor.transform.position = new Vector3(masterGrid.pathfindingGrid.getGridObject(mousePos).x, masterGrid.pathfindingGrid.getGridObject(mousePos).y, 0) + offsets;
+            }
+            else
+            {
+                //location is null
+                cursor.SetActive(false);
+            }
+
+            // Clean up old drag previews
+            while (dragHintList.Count > 0)          //use object pooling
+            {
+                GameObject go = dragHintList[0];
+                dragHintList.RemoveAt(0);
+                Destroy(go);
+            }
+
             //check if click on UI
             if (!EventSystem.current.IsPointerOverGameObject())
             {
                 if (!b_IsLMB && Input.GetMouseButton(0))           //LMB down
                 {
                     b_IsLMB = true;
-                    dragLMBstart = screenPos;
+                    dragLMBstart = mousePos;
                 }
                 else if (b_IsLMB && Input.GetMouseButton(0))       //LMB pressed, exclude first and last frame
                 {
-                    dragLMBend = screenPos;
+                    dragLMBend = mousePos;
 
                     switch (masterGrid.getRenderLayer())
                     {
@@ -85,14 +115,38 @@ public class PlayerController : BaseSingleton<PlayerController>
                             break;
                         default:            //tilemap
                             //set floor to tile
-                            masterGrid.tilemapGrid.getGridObject(mousePos).setTileType(TileMapObject.TileType.Lab);
+                            //masterGrid.tilemapGrid.getGridObject(mousePos).setTileType(TileMapObject.TileType.Lab);
+                            //start drag
+                            {
+                                int start_x = (int)(dragLMBstart.x/mapData.getCellSize() - mapData.getOriginPos().x);
+                                int end_x = (int)(dragLMBend.x / mapData.getCellSize() - mapData.getOriginPos().x);
+                                int start_y = (int)(dragLMBstart.y / mapData.getCellSize() - mapData.getOriginPos().y);
+                                int end_y = (int)(dragLMBend.y / mapData.getCellSize() - mapData.getOriginPos().y);
+
+                                if (end_x < start_x) (start_x, end_x) = (end_x, start_x);
+                                if (end_y < start_y) (start_y, end_y) = (end_y, start_y);
+
+                                for (int x = start_x; x <= end_x; x++)
+                                {
+                                    for (int y = start_y; y <= end_y; y++)
+                                    {
+                                        if (masterGrid.tilemapGrid.getGridObject(x, y) != null)
+                                        {
+                                            // Display the building hint on top of this tile position
+                                            GameObject go = Instantiate(BuildHintPrefab, new Vector3(x + offsets.x, y + offsets.y, 0), Quaternion.identity);
+                                            go.transform.SetParent(masterGrid.transform, true);
+                                            dragHintList.Add(go);
+                                        }
+                                    }
+                                }
+                            }
+
                             break;
                     }
                 }
                 else if (b_IsLMB && !Input.GetMouseButton(0))      //LMB up
                 {
                     b_IsLMB = false;
-                    //dragLMBstart, dragLMBend
 
                     switch (masterGrid.getRenderLayer())
                     {
@@ -106,17 +160,42 @@ public class PlayerController : BaseSingleton<PlayerController>
                             break;
                         default:            //tilemap
                             //spawn new item
-                            //ItemStat newItem = itemPrefab.GetComponent<ItemStat>();
-                            //if (masterGrid.pathfindingGrid.getGridObject(mousePos) != null)
+                            ItemStat newItem = itemPrefab.GetComponent<ItemStat>();
+                            if (masterGrid.pathfindingGrid.getGridObject(mousePos) != null)
+                            {
+                                GameObject tempItem = Instantiate(itemPrefab, cursor.transform);
+                                tempItem.transform.SetParent(masterGrid.inventoryManager.transform);
+                            }
+
+                            //end drag
                             //{
-                            //    newItem.xCoord = (int)Mathf.Clamp(mousePos.x, -mapData.getWidth() / 2, mapData.getWidth() / 2);
-                            //    newItem.yCoord = (int)Mathf.Clamp(mousePos.y, -mapData.getHeight() / 2, mapData.getHeight() / 2);
-                            //    GameObject tempItem = Instantiate(itemPrefab, new Vector3(newItem.xCoord, newItem.yCoord, 0), Quaternion.identity);
-                            //    tempItem.transform.SetParent(masterGrid.inventoryManager.transform); 
+                            //    int start_x = (int)(dragLMBstart.x / mapData.getCellSize() - mapData.getOriginPos().x);
+                            //    int end_x = (int)(dragLMBend.x / mapData.getCellSize() - mapData.getOriginPos().x);
+                            //    int start_y = (int)(dragLMBstart.y / mapData.getCellSize() - mapData.getOriginPos().y);
+                            //    int end_y = (int)(dragLMBend.y / mapData.getCellSize() - mapData.getOriginPos().y);
+
+                            //    if (end_x < start_x) (start_x, end_x) = (end_x, start_x);
+                            //    if (end_y < start_y) (start_y, end_y) = (end_y, start_y);
+
+                            //    for (int x = start_x; x <= end_x; x++)
+                            //    {
+                            //        for (int y = start_y; y <= end_y; y++)
+                            //        {
+                            //            if (masterGrid.tilemapGrid.getGridObject(x, y) != null)
+                            //            {
+                            //                //masterGrid.tilemapGrid.getGridObject(x, y).setTileType(TileMapObject.TileType.Lab);
+                            //                //spawn prefabs 
+                            //                GameObject go = Instantiate(BlueprintPrefab, new Vector3(x + offsets.x, y + offsets.y, 0), Quaternion.identity);
+                            //                go.transform.SetParent(masterGrid.transform, true);
+                            //            }
+                            //        }
+                            //    }
                             //}
+
                             break;
                     }
-                    
+
+                    //dragLMBstart, dragLMBend
                     dragLMBstart = dragLMBend = Vector3.zero;   //reset the position
                 }
                 else
@@ -151,7 +230,7 @@ public class PlayerController : BaseSingleton<PlayerController>
                             break;
                         default:            //tilemap
                             //set floor to checkered
-                            masterGrid.tilemapGrid.getGridObject(mousePos).setTileType(TileMapObject.TileType.Kitchen);
+                            //masterGrid.tilemapGrid.getGridObject(mousePos).setTileType(TileMapObject.TileType.Kitchen);
                             break;
                     }
                 }
@@ -170,7 +249,7 @@ public class PlayerController : BaseSingleton<PlayerController>
                             break;
                         default:            //tilemap
                             //spawn new NPC
-                            //masterGrid.npcController.spawnEntity((int)mousePos.x, (int)mousePos.y, masterGrid.npcController.prefabDrone);
+                            masterGrid.npcController.spawnEntity((int)mousePos.x, (int)mousePos.y, masterGrid.npcController.prefabDrone);
                             break;
                     }
                 }
@@ -190,8 +269,8 @@ public class PlayerController : BaseSingleton<PlayerController>
                         case 1:             //heat
                             break;
                         case 2:             //access
-                            PathNode startNode = masterGrid.pathfindingGrid.getGridObject(masterGrid.npcController.transform.GetChild(0).position);
-                            PathNode endNode = masterGrid.pathfindingGrid.getGridObject(mousePos);
+                            //PathNode startNode = masterGrid.pathfindingGrid.getGridObject(masterGrid.npcController.transform.GetChild(0).position);
+                            //PathNode endNode = masterGrid.pathfindingGrid.getGridObject(mousePos);
 
                             masterGrid.npcController.transform.GetChild(0).GetComponent<BaseEntity>().setTargetPos(mousePos);
 
@@ -224,14 +303,14 @@ public class PlayerController : BaseSingleton<PlayerController>
         {
             if (followCamTarget == null)
             {
-                Vector3 moveDir = new Vector3(0, 0, 0);
+                Vector3 moveDir = Vector3.zero;
                 //wasd movement, mouse edge scroll
                 if (Input.GetKey(KeyCode.W) || Input.mousePosition.y > Screen.height - edgeScrollBuffer) moveDir.y += moveSpeed;
                 if (Input.GetKey(KeyCode.A) || Input.mousePosition.x < edgeScrollBuffer) moveDir.x -= moveSpeed;
                 if (Input.GetKey(KeyCode.S) || Input.mousePosition.y < edgeScrollBuffer) moveDir.y -= moveSpeed;
                 if (Input.GetKey(KeyCode.D) || Input.mousePosition.x > Screen.width - edgeScrollBuffer) moveDir.x += moveSpeed;
 
-                transform.position += moveDir * Time.unscaledDeltaTime * (Input.GetKey(KeyCode.LeftShift) ? sprintMult : 1);
+                transform.position += Time.unscaledDeltaTime * (Input.GetKey(KeyCode.LeftShift) ? sprintMult : 1) * moveDir;
                 //zoom
                 if (Input.mouseScrollDelta.y > 0) transform.position = new Vector3(transform.position.x, transform.position.y,
                                                   Mathf.Lerp(transform.position.z, transform.position.z + zoomSpeed, Time.unscaledDeltaTime * zoomSpeed));

@@ -9,7 +9,7 @@ public class InventoryManager : MonoBehaviour
     private void Awake()
     {
         masterGrid = transform.parent.Find("Grid System").gameObject.GetComponent<MasterGrid>();
-        npcController = transform.parent.Find("Inventory Manager").gameObject.GetComponent<NPCController>();
+        npcController = transform.parent.Find("NPC Controller").gameObject.GetComponent<NPCController>();
     }
 
     private void Update()

@@ -76,7 +76,7 @@ public class BaseEntity : MonoBehaviour
     private int equipHead, equipOuterwear, equipChest, equipInnerwear, equipPants;
     private int equipDrone, equipUtility, equipTool;
 
-    private bool canFly = false;            //ie equipped jetpack
+    [SerializeField] private bool canFly = false;            //ie equipped jetpack
 
     // Inventory
     private int currInventorySize, maxInventorySize;
@@ -178,7 +178,7 @@ public class BaseEntity : MonoBehaviour
     {
         pathVectorList = null;
         //pick up item
-        interact();
+        if (itemPtr || npcPtr) interact();
     }
 
     // Update is called once per frame
@@ -199,15 +199,16 @@ public class BaseEntity : MonoBehaviour
         //set pathfind target
         if (itemPtr == null)
         {
+            if (pathVectorList != null) stopMoving();
             Debug.Log("waiting for item");
-            itemPtr = mapInstance.findNearest((int)transform.position.x, (int)transform.position.y, "Aluminium", canFly);
+            itemPtr = mapInstance.findNearest(transform.position, "Aluminium", canFly);
         }
         else
         {
             //get item
             if (pathVectorList == null)     //start moving only when item is found
             {
-                setTargetPos(new Vector3(itemPtr.xCoord, itemPtr.yCoord, 0));
+                setTargetPos(itemPtr.transform.position);
             }
         }
 

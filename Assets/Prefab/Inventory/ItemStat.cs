@@ -11,7 +11,6 @@ public class ItemStat : MonoBehaviour
     public float weight;
     public float durability;
     public int quantity;
-    public int xCoord, yCoord;
 
     //other values
     public float minTemp, maxTemp;     //temp range for adverse effects
