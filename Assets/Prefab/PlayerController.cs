@@ -32,32 +32,29 @@ public class PlayerController : BaseSingleton<PlayerController>
 
     private Vector3 offsets;
 
+    public int state = 0;
+
+    private LineRenderer cameraBounds;
+
     private void Awake()
     {
         //assign reference to map size
         mapData = FindAnyObjectByType<MapData>();
-        minPosX = mapData.getOriginPos().x;     //negative
-        minPosY = mapData.getOriginPos().y;
-        maxPosX = -mapData.getOriginPos().x;    //double negative
-        maxPosY = -mapData.getOriginPos().y;
+        minPosX = mapData.getOriginPos().x + mapData.getCellSize() * 16;     //negative
+        minPosY = mapData.getOriginPos().y + mapData.getCellSize() * 16;
+        maxPosX = -mapData.getOriginPos().x - mapData.getCellSize() * 16;    //double negative
+        maxPosY = -mapData.getOriginPos().y - mapData.getCellSize() * 16;
 
         masterGrid = gameObject.transform.parent.parent.Find("Grid System").GetComponent<MasterGrid>();
         offsets = mapData.getOriginPos() + new Vector3(mapData.getCellSize() / 2, mapData.getCellSize() / 2, 0);
 
         dragHintList = new List<GameObject>();
+        cameraBounds = transform.GetChild(0).GetComponent<LineRenderer>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (minPosX == maxPosX && minPosY == maxPosY)
-        {
-            minPosX = mapData.getOriginPos().x;
-            minPosY = mapData.getOriginPos().y;
-            maxPosX = -mapData.getOriginPos().x;
-            maxPosY = -mapData.getOriginPos().y;
-        }
-        
         //mouse input
         {
             screenPos = Input.mousePosition;
@@ -168,29 +165,29 @@ public class PlayerController : BaseSingleton<PlayerController>
                             }
 
                             //end drag
-                            //{
-                            //    int start_x = (int)(dragLMBstart.x / mapData.getCellSize() - mapData.getOriginPos().x);
-                            //    int end_x = (int)(dragLMBend.x / mapData.getCellSize() - mapData.getOriginPos().x);
-                            //    int start_y = (int)(dragLMBstart.y / mapData.getCellSize() - mapData.getOriginPos().y);
-                            //    int end_y = (int)(dragLMBend.y / mapData.getCellSize() - mapData.getOriginPos().y);
+                            {
+                                int start_x = (int)(dragLMBstart.x / mapData.getCellSize() - mapData.getOriginPos().x);
+                                int end_x = (int)(dragLMBend.x / mapData.getCellSize() - mapData.getOriginPos().x);
+                                int start_y = (int)(dragLMBstart.y / mapData.getCellSize() - mapData.getOriginPos().y);
+                                int end_y = (int)(dragLMBend.y / mapData.getCellSize() - mapData.getOriginPos().y);
 
-                            //    if (end_x < start_x) (start_x, end_x) = (end_x, start_x);
-                            //    if (end_y < start_y) (start_y, end_y) = (end_y, start_y);
+                                if (end_x < start_x) (start_x, end_x) = (end_x, start_x);
+                                if (end_y < start_y) (start_y, end_y) = (end_y, start_y);
 
-                            //    for (int x = start_x; x <= end_x; x++)
-                            //    {
-                            //        for (int y = start_y; y <= end_y; y++)
-                            //        {
-                            //            if (masterGrid.tilemapGrid.getGridObject(x, y) != null)
-                            //            {
-                            //                //masterGrid.tilemapGrid.getGridObject(x, y).setTileType(TileMapObject.TileType.Lab);
-                            //                //spawn prefabs 
-                            //                GameObject go = Instantiate(BlueprintPrefab, new Vector3(x + offsets.x, y + offsets.y, 0), Quaternion.identity);
-                            //                go.transform.SetParent(masterGrid.transform, true);
-                            //            }
-                            //        }
-                            //    }
-                            //}
+                                for (int x = start_x; x <= end_x; x++)
+                                {
+                                    for (int y = start_y; y <= end_y; y++)
+                                    {
+                                        if (masterGrid.tilemapGrid.getGridObject(x, y) != null)
+                                        {
+                                            masterGrid.tilemapGrid.getGridObject(x, y).setTileType(TileMapObject.TileType.Lab);
+                                            //spawn prefabs 
+                                            //GameObject go = Instantiate(BlueprintPrefab, new Vector3(x + offsets.x, y + offsets.y, 0), Quaternion.identity);
+                                            //go.transform.SetParent(masterGrid.transform, true);
+                                        }
+                                    }
+                                }
+                            }
 
                             break;
                     }
@@ -334,6 +331,19 @@ public class PlayerController : BaseSingleton<PlayerController>
             if (transform.position.y >= maxPosY) transform.position = new Vector3(transform.position.x, maxPosY, transform.position.z);
             if (transform.position.z >= minZoom) transform.position = new Vector3(transform.position.x, transform.position.y, minZoom);
             if (transform.position.z <= maxZoom) transform.position = new Vector3(transform.position.x, transform.position.y, maxZoom);
+
+            Vector3 topleft = Camera.main.ScreenToWorldPoint(new Vector3(0, Screen.height, -Camera.main.transform.position.z));
+            Vector3 topright = Camera.main.ScreenToWorldPoint(new Vector3(Screen.width, Screen.height, -Camera.main.transform.position.z));
+            Vector3 bottomleft = Camera.main.ScreenToWorldPoint(new Vector3(0, 0, -Camera.main.transform.position.z));
+            Vector3 bottomright = Camera.main.ScreenToWorldPoint(new Vector3(Screen.width, 0, -Camera.main.transform.position.z));
+            
+            Vector3[] lineVector = new Vector3[4];
+            lineVector[0] = topleft;
+            lineVector[1] = topright;
+            lineVector[2] = bottomright;
+            lineVector[3] = bottomleft;
+
+            cameraBounds.SetPositions(lineVector);
         }
     }
 }

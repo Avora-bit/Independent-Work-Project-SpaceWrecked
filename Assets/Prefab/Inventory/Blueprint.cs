@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ConstructionBlueprint : MonoBehaviour
+public class Blueprint : MonoBehaviour
 {
     //created when placing items using build mode
     //has location data

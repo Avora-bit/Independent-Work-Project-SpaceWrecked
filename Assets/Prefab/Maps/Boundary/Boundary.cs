@@ -23,7 +23,7 @@ public class Boundary : MonoBehaviour
         cornerBoundary = Instantiate(boundaryPrefab, transform);
         cornerBoundary.transform.position = new Vector3(mapData.getOriginPos().x - 8, -mapData.getOriginPos().y + 8 - 1, 0);
         cornerBoundary = Instantiate(boundaryPrefab, transform);
-        cornerBoundary.transform.position = new Vector3(-mapData.getOriginPos().x + 8, -mapData.getOriginPos().y + 8, 0);
+        cornerBoundary.transform.position = new Vector3(-mapData.getOriginPos().x + 8 - 1, -mapData.getOriginPos().y + 8 - 1, 0);
 
         //left and right
         for (int i = 0; i < height/16; i++)
