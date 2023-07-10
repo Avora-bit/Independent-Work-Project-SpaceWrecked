@@ -51,9 +51,7 @@ public class MasterGrid : MonoBehaviour
     private Dictionary<TileMapObject.TileType, UVCoords> dictUVCoords;
 
     //able to store prefabs as well as construction blueprints
-    public BaseGrid<GameObject> structureArray = new BaseGrid<GameObject>();
-    public BaseGrid<GameObject> floorArray = new BaseGrid<GameObject>();
-    public BaseGrid<GameObject> ceilingArray = new BaseGrid<GameObject>();
+    public BaseGrid<InstalledObject> InstalledObjectArray = new BaseGrid<InstalledObject>();
 
     void Awake()
     {
@@ -89,6 +87,7 @@ public class MasterGrid : MonoBehaviour
         arrayRadiation.generateGrid(mapData, (arrayHeat, x, y) => 0);
         arrayOxygen.generateGrid(mapData, (arrayOxygen, x, y) => 0);
         pathfindingGrid.generateGrid(mapData, (pathfindingGrid, x, y) => new PathNode(pathfindingGrid, x, y));
+
     }
 
     public List<Vector3> findVectorPath(Vector3 startPos, Vector3 endPos, bool canFly)

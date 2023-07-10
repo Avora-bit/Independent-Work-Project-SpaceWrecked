@@ -5,20 +5,22 @@ public class TileMapObject
     public enum TileType
     {
         None,
-        Lab,
-        Kitchen,
-
-        TotalSprites
+        Aluminium,
+        Steel,
+        Plasteel,
+        Tungsten,
     }
 
-     BaseGrid<TileMapObject> grid;            //reference to the overall grid
-     public int x, y;
-     TileType tileType = TileType.None;
+    BaseGrid<TileMapObject> grid;            //reference to the overall grid
+    public int x, y;
+    TileType tileType = TileType.None;
+
+    float movementCost;
 
     LooseObject looseObject;
     InstalledObject installedObject;
 
-    public TileMapObject(BaseGrid<TileMapObject> grid, int x, int y)
+    public TileMapObject(BaseGrid<TileMapObject> grid, int x, int y, float movementCost = 1f)
     {
         this.grid = grid;
         this.x = x;

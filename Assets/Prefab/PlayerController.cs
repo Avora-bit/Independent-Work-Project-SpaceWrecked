@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using static UnityEngine.EventSystems.EventTrigger;
 
 public class PlayerController : BaseSingleton<PlayerController>
 {
@@ -35,6 +33,18 @@ public class PlayerController : BaseSingleton<PlayerController>
     public int state = 0;
 
     private LineRenderer cameraBounds;
+
+    public enum BuildMode
+    {
+        None, 
+        BuildFloor,
+        DestroyFloor,
+        BuildWall,
+        DestroyWall
+    }
+
+    private BuildMode buildMode = BuildMode.None;
+    private TileMapObject.TileType tileType = TileMapObject.TileType.None;
 
     private void Awake()
     {
@@ -112,7 +122,6 @@ public class PlayerController : BaseSingleton<PlayerController>
                             break;
                         default:            //tilemap
                             //set floor to tile
-                            //masterGrid.tilemapGrid.getGridObject(mousePos).setTileType(TileMapObject.TileType.Lab);
                             //start drag
                             {
                                 int start_x = (int)(dragLMBstart.x/mapData.getCellSize() - mapData.getOriginPos().x);
@@ -131,7 +140,7 @@ public class PlayerController : BaseSingleton<PlayerController>
                                         {
                                             // Display the building hint on top of this tile position
                                             GameObject go = Instantiate(BuildHintPrefab, new Vector3(x + offsets.x, y + offsets.y, 0), Quaternion.identity);
-                                            go.transform.SetParent(masterGrid.transform, true);
+                                            go.transform.SetParent(masterGrid.transform.GetChild(2), true);     //create hints in new child
                                             dragHintList.Add(go);
                                         }
                                     }
@@ -156,37 +165,26 @@ public class PlayerController : BaseSingleton<PlayerController>
                         case 4:             //oxygen
                             break;
                         default:            //tilemap
-                            //spawn new item
-                            ItemStat newItem = itemPrefab.GetComponent<ItemStat>();
-                            if (masterGrid.pathfindingGrid.getGridObject(mousePos) != null)
-                            {
-                                GameObject tempItem = Instantiate(itemPrefab, cursor.transform);
-                                tempItem.transform.SetParent(masterGrid.inventoryManager.transform);
-                            }
 
                             //end drag
                             {
-                                int start_x = (int)(dragLMBstart.x / mapData.getCellSize() - mapData.getOriginPos().x);
-                                int end_x = (int)(dragLMBend.x / mapData.getCellSize() - mapData.getOriginPos().x);
-                                int start_y = (int)(dragLMBstart.y / mapData.getCellSize() - mapData.getOriginPos().y);
-                                int end_y = (int)(dragLMBend.y / mapData.getCellSize() - mapData.getOriginPos().y);
-
-                                if (end_x < start_x) (start_x, end_x) = (end_x, start_x);
-                                if (end_y < start_y) (start_y, end_y) = (end_y, start_y);
-
-                                for (int x = start_x; x <= end_x; x++)
+                                foreach (Transform child in masterGrid.transform.GetChild(2))       //check all build hints
                                 {
-                                    for (int y = start_y; y <= end_y; y++)
+                                    if (buildMode != BuildMode.None)
                                     {
-                                        if (masterGrid.tilemapGrid.getGridObject(x, y) != null)
-                                        {
-                                            masterGrid.tilemapGrid.getGridObject(x, y).setTileType(TileMapObject.TileType.Lab);
-                                            //spawn prefabs 
-                                            //GameObject go = Instantiate(BlueprintPrefab, new Vector3(x + offsets.x, y + offsets.y, 0), Quaternion.identity);
-                                            //go.transform.SetParent(masterGrid.transform, true);
-                                        }
+                                        masterGrid.tilemapGrid.getGridObject(child.transform.position).setTileType(tileType);
                                     }
+                                    else
+                                    {
+                                        masterGrid.tilemapGrid.getGridObject(child.transform.position).setTileType(TileMapObject.TileType.None);
+                                    }
+                                    
+                                    //spawn prefabs 
+                                    //GameObject go = Instantiate(BlueprintPrefab, child.transform.position, Quaternion.identity);
+                                    //go.transform.SetParent(masterGrid.transform.GetChild(3), true);         //create blueprints in new children
+
                                 }
+
                             }
 
                             break;
@@ -226,8 +224,14 @@ public class PlayerController : BaseSingleton<PlayerController>
                             masterGrid.arrayOxygen.setGridObject(mousePos, oxygen);
                             break;
                         default:            //tilemap
-                            //set floor to checkered
-                            //masterGrid.tilemapGrid.getGridObject(mousePos).setTileType(TileMapObject.TileType.Kitchen);
+
+                            //spawn new item
+                            ItemStat newItem = itemPrefab.GetComponent<ItemStat>();
+                            if (masterGrid.pathfindingGrid.getGridObject(mousePos) != null)
+                            {
+                                GameObject tempItem = Instantiate(itemPrefab, cursor.transform);
+                                tempItem.transform.SetParent(masterGrid.inventoryManager.transform);
+                            }
                             break;
                     }
                 }
@@ -247,6 +251,12 @@ public class PlayerController : BaseSingleton<PlayerController>
                         default:            //tilemap
                             //spawn new NPC
                             masterGrid.npcController.spawnEntity((int)mousePos.x, (int)mousePos.y, masterGrid.npcController.prefabDrone);
+                            masterGrid.npcController.spawnEntity((int)mousePos.x, (int)mousePos.y, masterGrid.npcController.prefabHuman);
+                            masterGrid.npcController.spawnEntity((int)mousePos.x, (int)mousePos.y, masterGrid.npcController.prefabMech);
+
+                            //reset the control scheme
+                            
+
                             break;
                     }
                 }
@@ -345,5 +355,24 @@ public class PlayerController : BaseSingleton<PlayerController>
 
             cameraBounds.SetPositions(lineVector);
         }
+    }
+
+    //building
+    public void ResetControl()
+    {
+        buildMode = BuildMode.None;
+        tileType = TileMapObject.TileType.None;
+    }
+
+
+    public void setBuildMode(string buildMode)
+    {
+        BuildMode parsed_mode = (BuildMode)Enum.Parse(typeof(BuildMode), buildMode);
+        this.buildMode = parsed_mode;
+    }
+    public void setMaterial(string tileType)
+    {
+        TileMapObject.TileType parsed_mode = (TileMapObject.TileType)Enum.Parse(typeof(TileMapObject.TileType), tileType);
+        this.tileType = parsed_mode;
     }
 }

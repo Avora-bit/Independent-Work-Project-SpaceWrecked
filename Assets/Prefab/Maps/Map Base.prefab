@@ -230,6 +230,22 @@ PrefabInstance:
       propertyPath: m_Name
       value: Grid System
       objectReference: {fileID: 0}
+    - target: {fileID: 5629694585816014197, guid: b4b6cd49b9fda5141aed4685f3f156c4, type: 3}
+      propertyPath: tileMapSpriteUVArray.Array.data[0].uv11Pixel.y
+      value: 31
+      objectReference: {fileID: 0}
+    - target: {fileID: 5629694585816014197, guid: b4b6cd49b9fda5141aed4685f3f156c4, type: 3}
+      propertyPath: tileMapSpriteUVArray.Array.data[1].uv11Pixel.y
+      value: 31
+      objectReference: {fileID: 0}
+    - target: {fileID: 5629694585816014197, guid: b4b6cd49b9fda5141aed4685f3f156c4, type: 3}
+      propertyPath: tileMapSpriteUVArray.Array.data[2].uv11Pixel.y
+      value: 31
+      objectReference: {fileID: 0}
+    - target: {fileID: 5629694585816014197, guid: b4b6cd49b9fda5141aed4685f3f156c4, type: 3}
+      propertyPath: tileMapSpriteUVArray.Array.data[3].uv11Pixel.y
+      value: 31
+      objectReference: {fileID: 0}
     - target: {fileID: 8153672938824062032, guid: b4b6cd49b9fda5141aed4685f3f156c4, type: 3}
       propertyPath: m_Name
       value: Visual Overlay
