@@ -15,12 +15,10 @@ public class TileMapObject
     public int x, y;
     TileType tileType = TileType.None;
 
-    float movementCost;
-
     LooseObject looseObject;
     InstalledObject installedObject;
 
-    public TileMapObject(BaseGrid<TileMapObject> grid, int x, int y, float movementCost = 1f)
+    public TileMapObject(BaseGrid<TileMapObject> grid, int x, int y)
     {
         this.grid = grid;
         this.x = x;

@@ -12,7 +12,7 @@ public class TimeController : BaseSingleton<TimeController>
     //there is no seasons, months, years and other concepts of time blocks. 
     private int days, hours, minutes;
 
-    private float[] timeScale = {1f, 2f, 4f, 8f};
+    private float[] timeScale = {.5f, 1f, 2f, 4f};
     private int index = 0;          //default rate of time
     private bool togglePause = false;
 
@@ -45,9 +45,9 @@ public class TimeController : BaseSingleton<TimeController>
         else Time.timeScale = timeScale[index];
     } //does not change index so the next toggle will set the timescale back to before. 
 
-    public void setTimeNormal() { index = 0; togglePause = false; Time.timeScale = timeScale[index]; }
-    public void setTimeFast() { index = 1; togglePause = false; Time.timeScale = timeScale[index]; }
-    public void setTimeFaster() { index = 2; togglePause = false; Time.timeScale = timeScale[index]; }
-    public void setTimeFastest() { index = 3; togglePause = false; Time.timeScale = timeScale[index]; }
+    public void setTimeSlow() { index = 0; togglePause = false; Time.timeScale = timeScale[index]; }
+    public void setTimeNormal() { index = 1; togglePause = false; Time.timeScale = timeScale[index]; }
+    public void setTimeFast() { index = 2; togglePause = false; Time.timeScale = timeScale[index]; }
+    public void setTimeFaster() { index = 3; togglePause = false; Time.timeScale = timeScale[index]; }
 
 }

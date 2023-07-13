@@ -1,4 +1,6 @@
+using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class InstalledObject
@@ -10,20 +12,50 @@ public class InstalledObject
         Left,
         Right
     }
-    Direction dir = Direction.Up;
-    Vector2 position;                 //origin position of the object
+    public Direction dir = Direction.Up;
+    public Vector2 position;                 //origin position of the object
 
-    string objectType;              //sprite to render
+    public string objectType;              //sprite to render          //to be replaced with gameobject or similar storage medium
+    public int width, height;
+    public float movementCost;             //sum modifier
 
-    float movementCost = 1;             //sum multiplier
-    int width = 1, height = 1;
+    //get reference to health
 
-    public InstalledObject(string objectType, float movementCost, int width, int height)
+    int maxHealth, currHealth;
+
+    static public InstalledObject CreateObject(string objectType, int width = 1, int height = 1, float movementCost = 1)
     {
-        this.objectType = objectType;
-        this.movementCost = movementCost;
-        this.width = width;
-        this.height = height;
+        InstalledObject obj = new InstalledObject();
+        obj.objectType = objectType;
+        obj.width = width;
+        obj.height = height;
+        obj.movementCost = movementCost;
+
+        obj.dir = Direction.Up;                 //assign with new variable 
+
+        obj.install();
+        return obj;
+    }
+
+    public void install()
+    {
+        switch (dir)
+        {
+            default:            //ignore as only 4 directions
+            case Direction.Up:
+                //assign the rotation to the object, requires non-static function and monobehavior
+                //rotation = 0;
+                break;
+            case Direction.Down:
+
+                break;
+            case Direction.Left:
+
+                break;
+            case Direction.Right:
+
+                break;
+        }
     }
 
     public List<Vector2> GetGridPositionList()
@@ -38,7 +70,6 @@ public class InstalledObject
         {
             default:            //ignore as only 4 directions
             case Direction.Up:
-            case Direction.Down:
                 for (int x = 0; x < width; x++)
                 {
                     for (int y = 0; y < height; y++)
@@ -47,8 +78,16 @@ public class InstalledObject
                     }
                 }
                 break;
+            case Direction.Down:
+                for (int x = 0; x < width; x++)
+                {
+                    for (int y = 0; y < height; y++)
+                    {
+                        list.Add(position + new Vector2(-x, -y));
+                    }
+                }
+                break;
             case Direction.Left:
-            case Direction.Right:           //90 degree offset from the previous case
                 for (int x = 0; x < height; x++)
                 {
                     for (int y = 0; y < width; y++)
@@ -57,9 +96,16 @@ public class InstalledObject
                     }
                 }
                 break;
+            case Direction.Right:           //90 degree offset from the previous case
+                for (int x = 0; x < height; x++)
+                {
+                    for (int y = 0; y < width; y++)
+                    {
+                        list.Add(position + new Vector2(-x, -y));
+                    }
+                }
+                break;
         }
-
-
 
 
         return list;

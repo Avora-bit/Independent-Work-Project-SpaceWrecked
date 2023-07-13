@@ -160,10 +160,11 @@ public class BaseEntity : MonoBehaviour
         if (pathVectorList != null)     //only move when there is a path
         {
             Vector3 targetPos = pathVectorList[currentPathIndex];
+            float tileMovementOffset = mapInstance.pathfindingGrid.getGridObject(transform.position).movementCost;
             if (Vector3.Distance(transform.position, targetPos) > 0.05f)
             {
                 Vector3 moveDir = (targetPos - transform.position).normalized;
-                transform.position = transform.position + moveDir * rateMove * Time.deltaTime;
+                transform.position = transform.position + moveDir * rateMove * Time.deltaTime * tileMovementOffset;              //add speed multiplier here, check for the grid that the npc is on, then apply the multiplier
             }
             else
             {

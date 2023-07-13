@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEditor.PlayerSettings;
+using Random = UnityEngine.Random;
 
 public class MasterGrid : MonoBehaviour
 {
@@ -13,25 +13,6 @@ public class MasterGrid : MonoBehaviour
 
     public InventoryManager inventoryManager;      //sibling
     public NPCController npcController;            //sibling
-
-    //ground renderer
-    private Mesh mesh;
-
-    //child object, overlay renderer
-    private Mesh overlayMesh;
-    private MeshRenderer overlayMeshRenderer;
-    private int renderLayer = 0;            //0 for dont render, 1++ according to following arrays
-
-    public BaseGrid<double> arrayHeat = new BaseGrid<double>();
-    public BaseGrid<double> arrayRadiation = new BaseGrid<double>();
-    public BaseGrid<double> arrayOxygen = new BaseGrid<double>();
-
-    public BaseGrid<PathNode> pathfindingGrid = new BaseGrid<PathNode>();
-    //stores data for access levels, walkability and weighted paths
-    private List<PathNode> openList;                //list to allow for data manipulation
-    private HashSet<PathNode> closedList;           //generic hashset to check if it contains neighbour
-    private const int MOVE_STRAIGHT_COST = 10;
-    private const int MOVE_DIAGONAL_COST = 14;              //sqrt of 10+10
 
     [Serializable]
     public struct TileMapSpriteUV
@@ -46,9 +27,29 @@ public class MasterGrid : MonoBehaviour
         public Vector2 uv00;
         public Vector2 uv11;
     }
+    //ground renderer
+    private Mesh tileMesh;
     public BaseGrid<TileMapObject> tilemapGrid = new BaseGrid<TileMapObject>();
     [SerializeField] TileMapSpriteUV[] tileMapSpriteUVArray;
     private Dictionary<TileMapObject.TileType, UVCoords> dictUVCoords;
+
+
+    private Mesh roomMesh;
+    public BaseGrid<PathNode> pathfindingGrid = new BaseGrid<PathNode>();
+    //stores data for access levels, walkability and weighted paths
+    private List<PathNode> openList;                //list to allow for data manipulation
+    private HashSet<PathNode> closedList;           //generic hashset to check if it contains neighbour
+    private const int MOVE_STRAIGHT_COST = 10;
+    private const int MOVE_DIAGONAL_COST = 14;              //sqrt of 10+10
+
+    //child object, overlay renderer
+    private Mesh overlayMesh;
+    private MeshRenderer overlayMeshRenderer;
+    private int renderLayer = 0;            //0 for dont render, 1++ according to following arrays
+
+    public BaseGrid<double> arrayHeat = new BaseGrid<double>();
+    public BaseGrid<double> arrayRadiation = new BaseGrid<double>();
+    public BaseGrid<double> arrayOxygen = new BaseGrid<double>();
 
     //able to store prefabs as well as construction blueprints
     public BaseGrid<InstalledObject> InstalledObjectArray = new BaseGrid<InstalledObject>();
@@ -61,8 +62,9 @@ public class MasterGrid : MonoBehaviour
         npcController = transform.parent.Find("NPC Controller").gameObject.GetComponent<NPCController>();
 
         //tile mesh
-        mesh = new Mesh();
-        GetComponent<MeshFilter>().mesh = mesh;
+        tilemapGrid.generateGrid(mapData, (tilemapGrid, x, y) => new TileMapObject(tilemapGrid, x, y));
+        tileMesh = new Mesh();
+        GetComponent<MeshFilter>().mesh = tileMesh;
 
         Texture texture = GetComponent<MeshRenderer>().material.mainTexture;
         float tWidth = texture.width; 
@@ -77,16 +79,20 @@ public class MasterGrid : MonoBehaviour
         }
 
         //overlay renderer
-        tilemapGrid.generateGrid(mapData, (tileMap, x, y) => new TileMapObject(tileMap, x, y));
-        overlayMeshRenderer = transform.GetChild(0).GetComponent<MeshRenderer>();
+        overlayMeshRenderer = transform.Find("OverlayRenderer").GetComponent<MeshRenderer>();
         overlayMesh = new Mesh();
-        transform.GetChild(0).GetComponent<MeshFilter>().mesh = overlayMesh;
+        transform.Find("OverlayRenderer").GetComponent<MeshFilter>().mesh = overlayMesh;
+
+        //room
+        pathfindingGrid.generateGrid(mapData, (pathfindingGrid, x, y) => new PathNode(pathfindingGrid, x, y));
+        
+        roomMesh = new Mesh();
+        transform.Find("RoomRenderer").GetComponent<MeshFilter>().mesh = roomMesh;
 
         //create grids with data type
         arrayHeat.generateGrid(mapData, (arrayHeat, x, y) => -300);
         arrayRadiation.generateGrid(mapData, (arrayHeat, x, y) => 0);
         arrayOxygen.generateGrid(mapData, (arrayOxygen, x, y) => 0);
-        pathfindingGrid.generateGrid(mapData, (pathfindingGrid, x, y) => new PathNode(pathfindingGrid, x, y));
 
     }
 
@@ -120,7 +126,7 @@ public class MasterGrid : MonoBehaviour
         openList = new List<PathNode> { startnode };
         closedList = new HashSet<PathNode>();
 
-        //cycle through all nodes and set values
+        //cycle through all nodes and clean values
         for (int x = 0; x < mapData.getWidth(); x++)
         {
             for (int y = 0; y < mapData.getHeight(); y++)
@@ -156,7 +162,7 @@ public class MasterGrid : MonoBehaviour
                         pathfindingGrid.getGridObject(currNode.x, currNode.y + dirY).isSolid) continue;     //ignore
                 }
 
-                int tempCostG = currNode.costG + calculateDistance(currNode, neighbourNode) + neighbourNode.costPenalty;
+                int tempCostG = currNode.costG + calculateDistance(currNode, neighbourNode) + 1/neighbourNode.movementCost;
                 if (tempCostG < neighbourNode.costG)
                 {
                     neighbourNode.setPrevNode(currNode);
@@ -251,7 +257,15 @@ public class MasterGrid : MonoBehaviour
         if (tilemapGrid.getRebuild())
         {
             updateMeshVisual(tilemapGrid);
+            tilemapGrid.setRebuild(false);
         }
+        //room visual
+        if (pathfindingGrid.getRebuild())
+        {
+            updateMeshVisual(pathfindingGrid);
+            pathfindingGrid.setRebuild(false);
+        }
+
         //only rebuild mesh if both render and rebuild is true
         switch (renderLayer)
         {
@@ -260,14 +274,6 @@ public class MasterGrid : MonoBehaviour
                 if (arrayHeat.getRebuild())
                 {
                     updateMeshVisual(arrayHeat);
-                }
-                break;
-            case 2:
-                //access visual
-                if (pathfindingGrid.getRebuild())
-                {
-                    updateMeshVisual(pathfindingGrid);
-                    pathfindingGrid.setRebuild(false);
                 }
                 break;
             case 3:
@@ -303,7 +309,6 @@ public class MasterGrid : MonoBehaviour
             {
                 int index = x * mapData.getHeight() + y;
                 Vector3 quadSize = new Vector3(1, 1) * mapData.getCellSize();
-
                 TileMapObject gridObject = tilemapGrid.getGridObject(x, y);
                 TileMapObject.TileType tileType = gridObject.getTileType();
                 Vector2 UV00 = Vector2.zero, UV11 = Vector2.zero;
@@ -321,9 +326,41 @@ public class MasterGrid : MonoBehaviour
 
             }
         }
-        mesh.vertices = vertices;
-        mesh.uv = uv;
-        mesh.triangles = triangles;
+        tileMesh.vertices = vertices;
+        tileMesh.uv = uv;
+        tileMesh.triangles = triangles;
+    }
+
+    //room/access visual
+    public void updateMeshVisual(BaseGrid<PathNode> arrayType)
+        //ignore the map and only generate meshes on location with tiles
+        //change scheme to make all floor tiles white, aka generic
+        //check for a room, then rebuild the location with color
+    {
+        CreateEmptyMeshData(mapData.getWidth() * mapData.getHeight(),
+            out Vector3[] vertices, out Vector2[] uv, out int[] triangles);
+
+        for (int x = 0; x < mapData.getWidth(); x++)
+        {
+            for (int y = 0; y < mapData.getHeight(); y++)
+            {
+                int index = x * mapData.getHeight() + y;
+                Vector3 quadSize = new Vector3(1, 1) * mapData.getCellSize();
+                PathNode gridObject = pathfindingGrid.getGridObject(x, y);
+                bool isSolid = gridObject.isSolid;
+                bool isSpace = gridObject.isSpace;         //default value
+                int access = gridObject.accessLayer;
+                Vector2 gridValueUV = new Vector2(access / 7f, 0f);
+                if (isSpace || isSolid)             //space or solid
+                {
+                    quadSize = Vector3.zero;
+                }
+                AddQuad(vertices, uv, triangles, index, pathfindingGrid.getWorldPos(x, y) + 0.5f * quadSize, quadSize, gridValueUV);
+            }
+        }
+        roomMesh.vertices = vertices;
+        roomMesh.uv = uv;
+        roomMesh.triangles = triangles;
     }
 
     //debug
@@ -424,42 +461,6 @@ public class MasterGrid : MonoBehaviour
         overlayMesh.uv = uv;
         overlayMesh.triangles = triangles;
     }
-    public void updateMeshVisual(BaseGrid<PathNode> arrayType)
-    {
-        CreateEmptyMeshData(mapData.getWidth() * mapData.getHeight(),
-            out Vector3[] vertices, out Vector2[] uv, out int[] triangles);
-
-        for (int x = 0; x < mapData.getWidth(); x++)
-        {
-            for (int y = 0; y < mapData.getHeight(); y++)
-            {
-                int index = x * mapData.getHeight() + y;
-                Vector3 quadSize = new Vector3(1, 1) * mapData.getCellSize();
-
-                if (arrayType == pathfindingGrid)
-                {
-                    bool isSolid = pathfindingGrid.getGridObject(x, y).isSolid;
-                    if (!isSolid)
-                    {
-                        //walkable
-                        int access = pathfindingGrid.getGridObject(x, y).accessLayer;
-                        Vector2 gridValueUV = new Vector2(access / 7f, 0f);
-                        AddQuad(vertices, uv, triangles, index, pathfindingGrid.getWorldPos(x, y) + 0.5f * quadSize, quadSize, gridValueUV);
-                    }
-                    else
-                    {
-                        Vector2 gridValueUV = new Vector2(0, 0f);           //if not walkable then just black
-                        AddQuad(vertices, uv, triangles, index, pathfindingGrid.getWorldPos(x, y) + 0.5f * quadSize, quadSize, gridValueUV);
-                    }
-
-                }
-
-            }
-        }
-        overlayMesh.vertices = vertices;
-        overlayMesh.uv = uv;
-        overlayMesh.triangles = triangles;
-    }
 
     private void AddQuad(Vector3[] vertices, Vector2[] uvs, int[] triangles, int index, Vector3 GridPos, Vector3 QuadSize, Vector2 uv)
     {
@@ -535,36 +536,6 @@ public class MasterGrid : MonoBehaviour
             //    {
             //        debugTextArray[x, y].gameObject.SetActive(true);
             //        debugTextArray[x, y].text = ((int)arrayHeat.getGridObject(x, y)).ToString();
-            //    }
-            //}
-        }
-    }
-    public void toggleAccess()
-    {
-        if (renderLayer == 2)
-        {
-            overlayMeshRenderer.enabled = false;
-            renderLayer = 0;
-            //for (int x = 0; x < mapData.getWidth(); ++x)
-            //{
-            //    for (int y = 0; y < mapData.getHeight(); ++y)
-            //    {
-            //        debugTextArray[x, y].gameObject.SetActive(false);
-            //    }
-            //}
-        }
-        else
-        {
-            overlayMeshRenderer.enabled = true;
-            overlayMeshRenderer.material = Resources.Load<Material>("Overlay/Access");
-            updateMeshVisual(pathfindingGrid);                                  //requires update
-            renderLayer = 2;
-            //for (int x = 0; x < mapData.getWidth(); ++x)
-            //{
-            //    for (int y = 0; y < mapData.getHeight(); ++y)
-            //    {
-            //        debugTextArray[x, y].gameObject.SetActive(false);
-            //        debugTextArray[x, y].text = pathfindingGrid.getGridObject(x, y).ToString();
             //    }
             //}
         }
@@ -724,5 +695,4 @@ public class MasterGrid : MonoBehaviour
         return nearestItem;              //aka null, or closest item
         //if either process cannot find the item, then return null
     }
-
 }

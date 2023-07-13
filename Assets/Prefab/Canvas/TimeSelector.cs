@@ -12,14 +12,17 @@ public class TimeSelector : MonoBehaviour
     TimeController timeController;
 
     TextMeshProUGUI timeText;
-    Button btn_Pause, btn_Play, btn_Fast, btn_Faster, btn_Fastest;
+    Button btn_Slow, btn_Pause, btn_Play, btn_Fast, btn_Faster;
 
     void Awake()
     {
         timeController = FindObjectOfType<TimeController>();
         timeText = gameObject.transform.GetChild(0).gameObject.GetComponent<TextMeshProUGUI>();
-
         GameObject timeScale = gameObject.transform.GetChild(1).gameObject;
+
+        btn_Slow = timeScale.transform.Find("Btn_Slow").GetComponent<Button>();
+        btn_Slow.onClick.AddListener(timeController.setTimeSlow);
+
         btn_Pause = timeScale.transform.Find("Btn_Pause").GetComponent<Button>();
         btn_Pause.onClick.AddListener(timeController.pauseToggle);
 
@@ -32,8 +35,6 @@ public class TimeSelector : MonoBehaviour
         btn_Faster = timeScale.transform.Find("Btn_Faster").GetComponent<Button>();
         btn_Faster.onClick.AddListener(timeController.setTimeFaster);
 
-        btn_Fastest = timeScale.transform.Find("Btn_Fastest").GetComponent<Button>();
-        btn_Fastest.onClick.AddListener(timeController.setTimeFastest);
     }
     void Update()
     {
