@@ -13,11 +13,11 @@ public class InstalledObject
         Right
     }
     public Direction dir = Direction.Up;
-    public Vector2 position;                 //origin position of the object
+    public Vector2 position;                //origin position of the object
 
-    public string objectType;              //sprite to render          //to be replaced with gameobject or similar storage medium
+    public string objectType;               //sprite to render          //to be replaced with gameobject or similar storage medium
     public int width, height;
-    public float movementCost;             //sum modifier
+    public float movementCost;              //sum modifier
 
     //get reference to health
 
