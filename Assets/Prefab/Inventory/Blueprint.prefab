@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8767196839285602990}
   - component: {fileID: 8767196839285602991}
-  - component: {fileID: 8351104846758323675}
+  - component: {fileID: -4622149848873689250}
   m_Layer: 0
   m_Name: Blueprint
   m_TagString: Untagged
@@ -85,7 +85,7 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &8351104846758323675
+--- !u!114 &-4622149848873689250
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

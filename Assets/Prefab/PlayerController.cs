@@ -73,7 +73,7 @@ public class PlayerController : BaseSingleton<PlayerController>
             screenPos.z -= Camera.main.transform.position.z;
             mousePos = Camera.main.ScreenToWorldPoint(screenPos);
 
-            if (masterGrid.pathfindingGrid.getGridObject(mousePos) != null)
+            if (masterGrid.pathfindingGrid.getGridObject(mousePos) != null && !EventSystem.current.IsPointerOverGameObject())
             {
                 cursor.SetActive(true);
                 cursor.transform.position = new Vector3(masterGrid.pathfindingGrid.getGridObject(mousePos).x, masterGrid.pathfindingGrid.getGridObject(mousePos).y, 0) + offsets;
@@ -92,7 +92,7 @@ public class PlayerController : BaseSingleton<PlayerController>
                 Destroy(go);
             }
 
-            //check if cursor is on UI
+            //check if cursor is not on UI
             if (!EventSystem.current.IsPointerOverGameObject())
             {
                 //zoom
@@ -194,7 +194,7 @@ public class PlayerController : BaseSingleton<PlayerController>
                                     
                                     //spawn prefabs 
                                     GameObject go = Instantiate(BlueprintPrefab, child.transform.position, Quaternion.identity);
-                                    go.transform.SetParent(masterGrid.transform.GetChild(3), true);         //create blueprints in new children
+                                    go.transform.SetParent(masterGrid.transform.GetChild(4), true);         //create blueprints in new children
 
                                 }
                             }
