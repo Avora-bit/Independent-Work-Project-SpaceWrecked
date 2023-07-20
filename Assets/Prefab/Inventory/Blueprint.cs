@@ -22,7 +22,7 @@ public class Blueprint : MonoBehaviour
     // Start is called before the first frame update
     void Awake()
     {
-        selfRef = selfPrefab.GetComponent<ItemStat>();      //reference to script
+        //selfRef = selfPrefab.GetComponent<ItemStat>();      //reference to script
         //get prefab values
         
         //material

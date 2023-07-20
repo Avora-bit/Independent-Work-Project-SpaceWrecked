@@ -188,6 +188,10 @@ MonoBehaviour:
   BuildHintPrefab: {fileID: 8767196839285602988, guid: bdf247d0aa39e684f91808d4743c042d, type: 3}
   BlueprintPrefab: {fileID: 8767196839285602988, guid: afa4a2ea2207fe341929825288c84333, type: 3}
   followCamTarget: {fileID: 0}
+  mousePos: {x: 0, y: 0, z: 0}
+  screenPos: {x: 0, y: 0, z: 0}
+  dragLMBstart: {x: 0, y: 0, z: 0}
+  dragLMBend: {x: 0, y: 0, z: 0}
   itemPrefab: {fileID: 2056124641140046948, guid: f2d480916ee775c45a04a2583eea7ee4, type: 3}
   BlueprintPlacedMessage: Blueprint Placed
   cannotbuildMessage: Cannot Build Here!
@@ -320,7 +324,6 @@ Transform:
   - {fileID: 8112714992621690563}
   - {fileID: 8712236162428834504}
   - {fileID: 2779491328364822564}
-  - {fileID: 5252953432950563368}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -546,7 +549,7 @@ PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
-    m_TransformParent: {fileID: 8112714992884385495}
+    m_TransformParent: {fileID: 8712236162428834504}
     m_Modifications:
     - target: {fileID: 4844126805911557719, guid: 17fa6e1336dc7d84e8f36543c9f782e0, type: 3}
       propertyPath: m_Name
@@ -554,7 +557,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5421833248166098321, guid: 17fa6e1336dc7d84e8f36543c9f782e0, type: 3}
       propertyPath: m_RootOrder
-      value: 5
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5421833248166098321, guid: 17fa6e1336dc7d84e8f36543c9f782e0, type: 3}
       propertyPath: m_LocalPosition.x
@@ -598,11 +601,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 17fa6e1336dc7d84e8f36543c9f782e0, type: 3}
---- !u!4 &5252953432950563368 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 5421833248166098321, guid: 17fa6e1336dc7d84e8f36543c9f782e0, type: 3}
-  m_PrefabInstance: {fileID: 276977751166572473}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &3735221584285509465
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -1,9 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
-public class InstalledObject
+public class InstalledObject : MonoBehaviour
 {
     public enum Direction
     {
@@ -23,37 +22,32 @@ public class InstalledObject
 
     int maxHealth, currHealth;
 
-    static public InstalledObject CreateObject(string objectType, int width = 1, int height = 1, float movementCost = 1)
+    public GameObject CreateObject(string objectType, int width = 1, int height = 1, float movementCost = 1)
     {
-        InstalledObject obj = new InstalledObject();
-        obj.objectType = objectType;
-        obj.width = width;
-        obj.height = height;
-        obj.movementCost = movementCost;
+        this.objectType = objectType;
+        this.width = width;
+        this.height = height;
+        this.movementCost = movementCost;
 
-        obj.dir = Direction.Up;                 //assign with new variable 
-
-        obj.install();
-        return obj;
+        return gameObject;
     }
 
-    public void install()
+    public void install(Vector2 position, Direction dir)
     {
+        this.position = position;
+        gameObject.transform.position = position;
+        this.dir = dir;
         switch (dir)
         {
             default:            //ignore as only 4 directions
             case Direction.Up:
                 //assign the rotation to the object, requires non-static function and monobehavior
-                //rotation = 0;
                 break;
             case Direction.Down:
-
                 break;
             case Direction.Left:
-
                 break;
             case Direction.Right:
-
                 break;
         }
     }

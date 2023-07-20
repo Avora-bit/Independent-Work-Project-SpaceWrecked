@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class LooseObject
+public class LooseObject : MonoBehaviour
 {
     Vector2 position;           //location of item on floor
 

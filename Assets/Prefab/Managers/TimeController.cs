@@ -10,9 +10,9 @@ public class TimeController : BaseSingleton<TimeController>
     private float dayTime;                 //tracking current time in the day
     //assumes an effective 1:60 time ratio, 1 day cycle is 24 minutes
     //there is no seasons, months, years and other concepts of time blocks. 
-    private int days, hours, minutes;
+    private int days = 0, hours = 0, minutes = 0;
 
-    private float[] timeScale = {.5f, 1f, 2f, 4f};
+    private float[] timeScale = {.5f, 1f, 2f, 100f};
     private int index = 0;          //default rate of time
     private bool togglePause = false;
 
@@ -26,13 +26,12 @@ public class TimeController : BaseSingleton<TimeController>
             days += 1;
             dayTime = 0;
         }
+        hours = (int)Mathf.Floor((dElapsedTime / 60) - (days * 24));
+        minutes = (int)Mathf.Floor(dElapsedTime - (days * 24 * 60) - (hours * 60));
     }
 
     public string getTime()
-    {
-        hours = (int)Mathf.Floor((dElapsedTime - days * 14400) / 60);
-        minutes = (int)Mathf.Floor(dElapsedTime - (days * 14400) - (hours * 60));
-        return string.Format("{0} days\n{1:00}{2:00}", days, hours, minutes);
+    {        return string.Format("{0} days\n{1:00}{2:00}", days, hours, minutes);
     }
 
     public int getDays() { return days; }

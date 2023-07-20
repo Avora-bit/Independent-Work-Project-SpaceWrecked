@@ -6,6 +6,8 @@ public class PointerArrow : MonoBehaviour
 {
     public GameObject target;
 
+    Vector3 origin = Vector3.zero;
+
     // Update is called once per frame
     void Update()
     {
@@ -15,8 +17,6 @@ public class PointerArrow : MonoBehaviour
             Vector3 screenPos = Input.mousePosition;
             screenPos.z -= Camera.main.transform.position.z;
 
-            target.transform.position = Camera.main.ScreenToWorldPoint(screenPos);
-            
             transform.LookAt(target.transform.position);
             transform.GetChild(0).gameObject.SetActive(true);
         }
