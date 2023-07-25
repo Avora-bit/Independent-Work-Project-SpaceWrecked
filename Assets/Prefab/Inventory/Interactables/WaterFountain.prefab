@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7567729123997176717}
   m_Layer: 0
-  m_Name: WaterDispenser
+  m_Name: WaterFountain
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

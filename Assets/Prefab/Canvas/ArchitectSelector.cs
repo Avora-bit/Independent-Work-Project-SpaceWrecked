@@ -109,5 +109,6 @@ public class ArchitectSelector : MonoBehaviour
         {
             child.gameObject.SetActive(false);
         }
+        FindAnyObjectByType<PlayerController>().ResetControl();
     }
 }

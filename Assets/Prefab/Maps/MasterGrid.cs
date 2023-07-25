@@ -9,10 +9,27 @@ public class MasterGrid : MonoBehaviour
     //test grid stores all the interacting grids and updates them
     //this allows for the grid to reuse code and reduce update
 
+    //linking code for siblings
+    /*
+     public MasterGrid masterGrid;
+    public InventoryManager inventoryManager;
+    public ObjectManager objectManager;
+    public NPCManager npcManager;
+    public TaskManager taskManager;
+
+    masterGrid = transform.parent.Find("Grid System").gameObject.GetComponent<MasterGrid>();
+    inventoryManager = transform.parent.Find("Inventory Manager").gameObject.GetComponent<InventoryManager>();
+        objectManager = transform.parent.Find("Object Manager").gameObject.GetComponent<ObjectManager>();
+        npcManager = transform.parent.Find("NPC Manager").gameObject.GetComponent<NPCManager>();
+        taskManager = transform.parent.Find("Task Manager").gameObject.GetComponent<TaskManager>();
+     */
+
     private MapData mapData;                //reference to map data
 
-    public InventoryManager inventoryManager;      //sibling
-    public NPCController npcController;            //sibling
+    public InventoryManager inventoryManager;
+    public ObjectManager objectManager;
+    public NPCManager npcManager;
+    public TaskManager taskManager;
 
     [Serializable]
     public struct TileMapSpriteUV
@@ -59,10 +76,12 @@ public class MasterGrid : MonoBehaviour
         mapData = FindObjectOfType<MapData>();
 
         inventoryManager = transform.parent.Find("Inventory Manager").gameObject.GetComponent<InventoryManager>();
-        npcController = transform.parent.Find("NPC Controller").gameObject.GetComponent<NPCController>();
+        objectManager = transform.parent.Find("Object Manager").gameObject.GetComponent<ObjectManager>();
+        npcManager = transform.parent.Find("NPC Manager").gameObject.GetComponent<NPCManager>();
+        taskManager = transform.parent.Find("Task Manager").gameObject.GetComponent<TaskManager>();
 
-        //tile mesh
-        tilemapGrid.generateGrid(mapData, (tilemapGrid, x, y) => new TileMapObject(tilemapGrid, x, y));
+    //tile mesh
+    tilemapGrid.generateGrid(mapData, (tilemapGrid, x, y) => new TileMapObject(tilemapGrid, x, y));
         tileMesh = new Mesh();
         GetComponent<MeshFilter>().mesh = tileMesh;
 
@@ -239,18 +258,9 @@ public class MasterGrid : MonoBehaviour
     void Update()
     {
         //diffuse heat
-        if (Time.timeScale > 0 && arrayHeat.getRebuild())
-        {
-            arrayHeat.setRebuild(diffuse(arrayHeat));
-        }
-        if (Time.timeScale > 0 && arrayRadiation.getRebuild())
-        {
-            arrayRadiation.setRebuild(diffuse(arrayRadiation));
-        }
-        if (Time.timeScale > 0 && arrayOxygen.getRebuild())
-        {
-            arrayOxygen.setRebuild(diffuse(arrayOxygen));
-        }
+        if (Time.timeScale > 0 && arrayHeat.getRebuild()) arrayHeat.setRebuild(diffuse(arrayHeat));
+        if (Time.timeScale > 0 && arrayRadiation.getRebuild()) arrayRadiation.setRebuild(diffuse(arrayRadiation));
+        if (Time.timeScale > 0 && arrayOxygen.getRebuild()) arrayOxygen.setRebuild(diffuse(arrayOxygen));
 
         //tilemapGrid
         //always render the base tile mesh, only rebuild when updated
@@ -271,30 +281,20 @@ public class MasterGrid : MonoBehaviour
         {
             case 1:
                 //heat visual
-                if (arrayHeat.getRebuild())
-                {
-                    updateMeshVisual(arrayHeat);
-                }
+                if (arrayHeat.getRebuild()) updateMeshVisual(arrayHeat);
                 break;
             case 3:
                 //radiation visual
-                if (arrayRadiation.getRebuild()) 
-                {
-                    updateMeshVisual(arrayRadiation);
-                }
+                if (arrayRadiation.getRebuild()) updateMeshVisual(arrayRadiation);
                 break;
             case 4:
                 //oxygen visual
-                if (arrayOxygen.getRebuild())
-                {
-                    updateMeshVisual(arrayOxygen);
-                }
+                if (arrayOxygen.getRebuild()) updateMeshVisual(arrayOxygen);
                 break;
             default:
                 //case 0, nothing
                 break;
         }
-
     }
 
     //tile map, base render

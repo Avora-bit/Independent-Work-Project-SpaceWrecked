@@ -70,17 +70,12 @@ public class BaseEntity : MonoBehaviour
     private float maxFun, currFun, rateFun;
     private float maxSocial, currSocial, rateSocial;
 
-
     // Equipment
     // should be pointers to the object
     private int equipHead, equipOuterwear, equipChest, equipInnerwear, equipPants;
     private int equipDrone, equipUtility, equipTool;
 
-    [SerializeField] private bool canFly = false;            //ie equipped jetpack
-
-    // Inventory
-    private int currInventorySize, maxInventorySize;
-    private int[] InventoryItems;                           //pointer list to all items in inventory
+    [SerializeField] private bool canFly = false;
 
     // Start is called before the first frame update
     void Awake()

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.HID;
 
 public class PlayerController : BaseSingleton<PlayerController>
 {
@@ -27,8 +28,8 @@ public class PlayerController : BaseSingleton<PlayerController>
     public Vector3 mouseRollBack;
     public bool mousePosChanged = false;
 
-
     public GameObject itemPrefab;
+    public GameObject buildPrefab;
 
     private bool b_IsLMB = false, b_IsRMB = false, b_IsMMB = false;
 
@@ -151,58 +152,100 @@ public class PlayerController : BaseSingleton<PlayerController>
                             if (mousePosChanged)
                             {
                                 resetDraggable();
-                                //2d drag
+                                switch (buildMode)
                                 {
-                                    for (int x = start_x; x <= end_x; x++)
-                                    {
-                                        for (int y = start_y; y <= end_y; y++)
+                                    case BuildMode.BuildFloor:
+                                    case BuildMode.DestroyFloor:
+                                    case BuildMode.DestroyWall:
+                                        //2D drag
+                                        //blanket over the square
+                                        for (int x = start_x; x <= end_x; x++)
                                         {
-                                            if (masterGrid.tilemapGrid.getGridObject(x, y) != null)
+                                            for (int y = start_y; y <= end_y; y++)
                                             {
-                                                // Display the building hint on top of this tile position
-                                                GameObject go = Instantiate(BuildHintPrefab, new Vector3(x + offsets.x, y + offsets.y, 0), Quaternion.identity);
-                                                go.transform.SetParent(masterGrid.transform.GetChild(3), true);     //create hints in new child
-                                                dragHintList.Add(go);
+                                                if (masterGrid.tilemapGrid.getGridObject(x, y) != null)
+                                                {
+                                                    // Display the building hint on top of this tile position
+                                                    GameObject go = Instantiate(BuildHintPrefab, new Vector3(x + offsets.x, y + offsets.y, 0), Quaternion.identity);
+                                                    go.transform.SetParent(masterGrid.transform.GetChild(3), true);     //create hints in new child
+                                                    dragHintList.Add(go);
 
-                                                //check the tile and the associated layer
-                                                bool state = true;
-                                                if (masterGrid.tilemapGrid.getGridObject(x, y).getTileType() != TileMapObject.TileType.None)
-                                                {
-                                                    state = false;
+                                                    //check the tile and the associated layer
+                                                    bool state = true;
+                                                    if (buildMode !=BuildMode.DestroyWall)
+                                                    {
+                                                        if (!masterGrid.pathfindingGrid.getGridObject(x, y).isSpace) state = false;
+                                                        if (buildMode == BuildMode.DestroyFloor) state = !state;     //inverse state for destroy
+                                                    }
+                                                    else
+                                                    {
+                                                        if (!masterGrid.pathfindingGrid.getGridObject(x, y).isSolid) state = false;
+                                                    }
+                                                    go.GetComponent<BuildHint>().Check(state);
+
                                                 }
-                                                else
-                                                {
-                                                    //null else lock
-                                                }
-                                                if (buildMode == BuildMode.BuildFloor || buildMode == BuildMode.BuildWall)
-                                                {
-                                                    //null lock
-                                                }
-                                                else if (buildMode == BuildMode.DestroyFloor || buildMode == BuildMode.DestroyWall)
-                                                {
-                                                    state = !state;     //inverse state for destructor
-                                                }
-                                                go.GetComponent<BuildHint>().Check(state);
                                             }
                                         }
-                                    }
+                                        break;
+                                    case BuildMode.BuildWall:
+                                        //directional drag
+                                        //compare which direction is longer
+                                        //directional drag
+                                        {
+                                            int distX = end_x - start_x;
+                                            int distY = end_y - start_y;
+                                            bool isVertical = true;
+                                            if (distX > distY) isVertical = false;      //horizontal
+                                            if (isVertical)
+                                            {
+                                                for (int y = start_y; y <= end_y; y++)
+                                                {
+                                                    if (masterGrid.tilemapGrid.getGridObject(masterGrid.tilemapGrid.getGridObject(dragLMBstart).x, y) != null)
+                                                    {
+                                                        //Display the building hint on top of this tile position
+                                                        GameObject go = Instantiate(BuildHintPrefab, new Vector3(masterGrid.tilemapGrid.getGridObject(dragLMBstart).x + offsets.x, y + offsets.y, 0), Quaternion.identity);
+                                                        go.transform.SetParent(masterGrid.transform.GetChild(3), true);     //create hints in new child
+                                                        dragHintList.Add(go);
 
-                                    ////directional drag
-                                    //{
-                                    //    for (int x = start_x; x <= end_x; x++)
-                                    //    {
-                                    //        for (int y = start_y; y <= end_y; y++)
-                                    //        {
-                                    //            if (masterGrid.tilemapGrid.getGridObject(x, y) != null)
-                                    //            {
-                                    //                 Display the building hint on top of this tile position
-                                    //                GameObject go = Instantiate(BuildHintPrefab, new Vector3(x + offsets.x, y + offsets.y, 0), Quaternion.identity);
-                                    //                go.transform.SetParent(masterGrid.transform.GetChild(3), true);     //create hints in new child
-                                    //                dragHintList.Add(go);
-                                    //            }
-                                    //        }
-                                    //    }
-                                    //}
+                                                        //check the tile and the associated layer
+                                                        bool state = true;
+                                                        if (masterGrid.pathfindingGrid.getGridObject(masterGrid.tilemapGrid.getGridObject(dragLMBstart).x, y).isSpace ||
+                                                            masterGrid.pathfindingGrid.getGridObject(masterGrid.tilemapGrid.getGridObject(dragLMBstart).x, y).isSolid) state = false;
+                                                        go.GetComponent<BuildHint>().Check(state);
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                for (int x = start_x; x <= end_x; x++)
+                                                {
+                                                    if (masterGrid.tilemapGrid.getGridObject(x, masterGrid.tilemapGrid.getGridObject(dragLMBstart).y) != null)
+                                                    {
+                                                        //Display the building hint on top of this tile position
+                                                        GameObject go = Instantiate(BuildHintPrefab, new Vector3(x + offsets.x, masterGrid.tilemapGrid.getGridObject(dragLMBstart).y + offsets.y, 0), Quaternion.identity);
+                                                        go.transform.SetParent(masterGrid.transform.GetChild(3), true);     //create hints in new child
+                                                        dragHintList.Add(go);
+
+                                                        //check the tile and the associated layer
+                                                        bool state = true;
+                                                        if (masterGrid.pathfindingGrid.getGridObject(x, masterGrid.tilemapGrid.getGridObject(dragLMBstart).y).isSpace ||
+                                                            masterGrid.pathfindingGrid.getGridObject(x, masterGrid.tilemapGrid.getGridObject(dragLMBstart).y).isSolid) state = false;
+                                                        go.GetComponent<BuildHint>().Check(state);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        break;
+                                    case BuildMode.None:
+                                    case BuildMode.BuildInteractable:
+                                    case BuildMode.DestroyInteractable:
+                                        //disable drag
+                                        //placement is done by the cursor position
+                                        //all build hints change state based on placement 
+                                        
+                                        break;
+                                    default:
+                                        break;
                                 }
                             }
                             break;
@@ -225,28 +268,54 @@ public class PlayerController : BaseSingleton<PlayerController>
                         default:            //tilemap
                             //end drag
                             {
-                                foreach (Transform child in masterGrid.transform.GetChild(3))       //check all build hints
+                                switch (buildMode)
                                 {
-                                    if (!child.gameObject.GetComponent<BuildHint>().state)
-                                    {
-                                        continue;
-                                    }
+                                    default:
+                                    case BuildMode.None:
+                                        break;
+                                    case BuildMode.BuildFloor:
+                                        foreach (Transform child in masterGrid.transform.GetChild(3))
+                                        {
+                                            if (!child.gameObject.GetComponent<BuildHint>().state) continue;
+                                            masterGrid.tilemapGrid.getGridObject(child.position).setTileType(tileType);
+                                            masterGrid.tilemapGrid.setRebuild(true);
+                                            masterGrid.pathfindingGrid.getGridObject(child.position).isSpace = false;
+                                            masterGrid.pathfindingGrid.setRebuild(true);
+                                        }
+                                        break;
+                                    case BuildMode.DestroyFloor:
+                                        foreach (Transform child in masterGrid.transform.GetChild(3))
+                                        {
+                                            if (!child.gameObject.GetComponent<BuildHint>().state) continue;
+                                            masterGrid.tilemapGrid.getGridObject(child.position).setTileType(TileMapObject.TileType.None);
+                                            masterGrid.tilemapGrid.setRebuild(true);
+                                            masterGrid.pathfindingGrid.getGridObject(child.position).isSpace = true;
+                                            masterGrid.pathfindingGrid.setRebuild(true);
+                                        }
+                                        break;
+                                    case BuildMode.BuildWall:
+                                        foreach (Transform child in masterGrid.transform.GetChild(3))
+                                        {
+                                            if (!child.gameObject.GetComponent<BuildHint>().state) continue;
+                                            //spawn wall here
+                                            masterGrid.pathfindingGrid.getGridObject(child.position).isSolid = true;
+                                            masterGrid.pathfindingGrid.setRebuild(true);
+                                        }
+                                        break;
+                                    case BuildMode.DestroyWall:
+                                        foreach (Transform child in masterGrid.transform.GetChild(3))
+                                        {
+                                            if (!child.gameObject.GetComponent<BuildHint>().state) continue;
+                                            //destroy wall here
+                                            masterGrid.pathfindingGrid.getGridObject(child.position).isSolid = false;
+                                            masterGrid.pathfindingGrid.setRebuild(true);
+                                        }
+                                        break;
+                                    case BuildMode.BuildInteractable:
+                                        break;
+                                    case BuildMode.DestroyInteractable:
+                                        break;
 
-                                    if (buildMode == BuildMode.BuildFloor || buildMode == BuildMode.BuildWall)
-                                    {
-                                        masterGrid.tilemapGrid.getGridObject(child.position).setTileType(tileType);
-                                        masterGrid.tilemapGrid.setRebuild(true);
-                                        masterGrid.pathfindingGrid.getGridObject(child.position).isSpace = false;           //hardcoded value
-                                        masterGrid.pathfindingGrid.setRebuild(true);
-                                    }
-                                    else if (buildMode == BuildMode.DestroyFloor || buildMode == BuildMode.DestroyWall)
-                                    {
-                                        masterGrid.tilemapGrid.getGridObject(child.position).setTileType(TileMapObject.TileType.None);
-                                        masterGrid.tilemapGrid.setRebuild(true);
-                                        masterGrid.pathfindingGrid.getGridObject(child.position).isSpace = true;            //hardcoded value
-                                        masterGrid.pathfindingGrid.setRebuild(true);
-                                    }
-                                    
                                     //spawn prefabs 
                                     //if (!masterGrid.pathfindingGrid.getGridObject(child.position).isSolid)
                                     //{   //not solid, then place solid item
@@ -259,12 +328,10 @@ public class PlayerController : BaseSingleton<PlayerController>
                                     //    go.transform.SetParent(masterGrid.transform.GetChild(4), true);         //create blueprints in new children
                                     //}
                                 }
-                                resetDraggable();
+                                resetDraggable();       //clear the parent class
                             }
-
                             break;
                     }
-
                     dragLMBstart = dragLMBend = Vector3.zero;   //reset the position
                 }
                 else
@@ -323,9 +390,9 @@ public class PlayerController : BaseSingleton<PlayerController>
                             break;
                         default:            //tilemap
                             //spawn new NPC
-                            masterGrid.npcController.spawnEntity((int)mousePos.x, (int)mousePos.y, masterGrid.npcController.prefabDrone);
-                            masterGrid.npcController.spawnEntity((int)mousePos.x, (int)mousePos.y, masterGrid.npcController.prefabHuman);
-                            masterGrid.npcController.spawnEntity((int)mousePos.x, (int)mousePos.y, masterGrid.npcController.prefabMech);
+                            masterGrid.npcManager.spawnEntity((int)mousePos.x, (int)mousePos.y, masterGrid.npcManager.prefabDrone);
+                            masterGrid.npcManager.spawnEntity((int)mousePos.x, (int)mousePos.y, masterGrid.npcManager.prefabHuman);
+                            masterGrid.npcManager.spawnEntity((int)mousePos.x, (int)mousePos.y, masterGrid.npcManager.prefabMech);
 
                             //reset the control scheme
                             
@@ -349,16 +416,6 @@ public class PlayerController : BaseSingleton<PlayerController>
                         case 1:             //heat
                             break;
                         case 2:             //access
-                            //PathNode startNode = masterGrid.pathfindingGrid.getGridObject(masterGrid.npcController.transform.GetChild(0).position);
-                            //PathNode endNode = masterGrid.pathfindingGrid.getGridObject(mousePos);
-
-                            masterGrid.npcController.transform.GetChild(0).GetComponent<BaseEntity>().setTargetPos(mousePos);
-
-                            BaseEntity[] allChildren = masterGrid.npcController.transform.GetComponentsInChildren<BaseEntity>();
-                            foreach (BaseEntity child in allChildren)
-                            {
-                                child.setTargetPos(mousePos);
-                            }
                             break;
                         case 3:             //radiation
                             break;
@@ -442,6 +499,7 @@ public class PlayerController : BaseSingleton<PlayerController>
     {
         buildMode = BuildMode.None;
         tileType = TileMapObject.TileType.None;
+        buildPrefab = null;
     }
     public void setBuildMode(string buildMode)
     {
@@ -452,5 +510,11 @@ public class PlayerController : BaseSingleton<PlayerController>
     {
         TileMapObject.TileType parsed_mode = (TileMapObject.TileType)Enum.Parse(typeof(TileMapObject.TileType), tileType);
         this.tileType = parsed_mode;
+    }
+
+    public void setInstalledObject(string objectName)
+    {
+        //convert string to resource loader
+        //assign the build item here
     }
 }

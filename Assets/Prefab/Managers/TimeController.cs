@@ -12,7 +12,7 @@ public class TimeController : BaseSingleton<TimeController>
     //there is no seasons, months, years and other concepts of time blocks. 
     private int days = 0, hours = 0, minutes = 0;
 
-    private float[] timeScale = {.5f, 1f, 2f, 100f};
+    private float[] timeScale = {.5f, 1f, 2f, 4f};
     private int index = 0;          //default rate of time
     private bool togglePause = false;
 
