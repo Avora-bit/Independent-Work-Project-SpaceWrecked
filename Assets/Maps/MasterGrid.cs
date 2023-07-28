@@ -9,21 +9,6 @@ public class MasterGrid : MonoBehaviour
     //test grid stores all the interacting grids and updates them
     //this allows for the grid to reuse code and reduce update
 
-    //linking code for siblings
-    /*
-     public MasterGrid masterGrid;
-    public InventoryManager inventoryManager;
-    public ObjectManager objectManager;
-    public NPCManager npcManager;
-    public TaskManager taskManager;
-
-    masterGrid = transform.parent.Find("Grid System").gameObject.GetComponent<MasterGrid>();
-    inventoryManager = transform.parent.Find("Inventory Manager").gameObject.GetComponent<InventoryManager>();
-        objectManager = transform.parent.Find("Object Manager").gameObject.GetComponent<ObjectManager>();
-        npcManager = transform.parent.Find("NPC Manager").gameObject.GetComponent<NPCManager>();
-        taskManager = transform.parent.Find("Task Manager").gameObject.GetComponent<TaskManager>();
-     */
-
     private MapData mapData;                //reference to map data
 
     public InventoryManager inventoryManager;

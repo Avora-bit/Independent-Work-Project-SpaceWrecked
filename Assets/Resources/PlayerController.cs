@@ -240,8 +240,9 @@ public class PlayerController : BaseSingleton<PlayerController>
                                     case BuildMode.BuildInteractable:
                                     case BuildMode.DestroyInteractable:
                                         //disable drag
-                                        //placement is done by the cursor position
-                                        //all build hints change state based on placement 
+                                        //render the gameobject on the cursor, press R to rotate clockwise
+                                        //display buildhints based on where the object is being placed
+                                        //display the red state if either the tile is space or solid
                                         
                                         break;
                                     default:
@@ -312,8 +313,14 @@ public class PlayerController : BaseSingleton<PlayerController>
                                         }
                                         break;
                                     case BuildMode.BuildInteractable:
+                                        //place on the cursor with respect to rotation
+
+                                        //set the tiles underneath to solid
                                         break;
                                     case BuildMode.DestroyInteractable:
+                                        //check which tile and what is on the tile
+                                        //destroy object
+                                        //set the tiles underneath to tiles
                                         break;
 
                                     //spawn prefabs 
@@ -503,18 +510,18 @@ public class PlayerController : BaseSingleton<PlayerController>
     }
     public void setBuildMode(string buildMode)
     {
-        BuildMode parsed_mode = (BuildMode)Enum.Parse(typeof(BuildMode), buildMode);
-        this.buildMode = parsed_mode;
+        BuildMode parsed = (BuildMode)Enum.Parse(typeof(BuildMode), buildMode);
+        this.buildMode = parsed;
     }
     public void setMaterial(string tileType)
     {
-        TileMapObject.TileType parsed_mode = (TileMapObject.TileType)Enum.Parse(typeof(TileMapObject.TileType), tileType);
-        this.tileType = parsed_mode;
+        TileMapObject.TileType parsed = (TileMapObject.TileType)Enum.Parse(typeof(TileMapObject.TileType), tileType);
+        this.tileType = parsed;
     }
 
     public void setInstalledObject(string objectName)
     {
-        //convert string to resource loader
-        //assign the build item here
+        if (objectName == "Null") buildPrefab = null;
+        else buildPrefab = Resources.Load<GameObject>("Inventory/Interactables/" + objectName);
     }
 }

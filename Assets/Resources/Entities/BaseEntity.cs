@@ -196,8 +196,8 @@ public class BaseEntity : MonoBehaviour
         if (itemPtr == null)
         {
             if (pathVectorList != null) stopMoving();
-            Debug.Log("waiting for item");
-            itemPtr = mapInstance.findNearest(transform.position, "Aluminium", canFly);
+            //Debug.Log("waiting for item");
+            //itemPtr = mapInstance.findNearest(transform.position, "Aluminium", canFly);
         }
         else
         {
@@ -219,8 +219,6 @@ public class BaseEntity : MonoBehaviour
         {
             //null
         }
-
-        
 
         //movement
         handleMovement();
