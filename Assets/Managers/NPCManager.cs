@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using static BaseEntity;
 
 public class NPCManager : MonoBehaviour
 {
@@ -11,8 +12,6 @@ public class NPCManager : MonoBehaviour
     public TaskManager taskManager;
 
     public GameObject prefabHuman, prefabMech, prefabDrone;
-
-    BaseEntity testingNPC;
 
     public List<Task> taskList = new List<Task>();
 
@@ -29,27 +28,27 @@ public class NPCManager : MonoBehaviour
         //{
         //    spawnEntity(prefabDrone);
         //}
-        //spawnEntity(prefabDrone);
+        spawnEntity(0, 0, prefabDrone);
         //testingNPC = transform.GetChild(0).GetComponent<BaseEntity>();
     }
 
     private void Update()
     {
-
-        //assign target
-        //check movement vector
-        //assign path
+        //assign target/task
+        foreach (Transform child in transform)
+        {
+            BaseEntity childEntity = child.GetComponent<BaseEntity>();
+            if (childEntity.currFSMState == FSMstates.IDLE && childEntity.taskRef == null)
+            {
+                //task type from 0-7
+                //task priority from -3 to 3
+                //logic to select tasks
+                int taskValue = 0;
+                childEntity.taskRef = taskManager.assignTask(childEntity, taskValue);
+            }
+        }
     }
 
-    public GameObject spawnEntity(GameObject prefab)
-    {
-        GameObject entity = Instantiate(prefab, transform);
-        int xPos = Random.Range(0, mapData.getWidth() / 2);
-        int yPos = Random.Range(0, mapData.getHeight() / 2);
-        entity.transform.position = new Vector3(xPos, yPos, 0);
-        entity.GetComponent<BaseEntity>().setMapInstance(masterGrid);
-        return entity;
-    }
     public GameObject spawnEntity(int x, int y, GameObject prefab)
     {
         GameObject entity = Instantiate(prefab, transform);

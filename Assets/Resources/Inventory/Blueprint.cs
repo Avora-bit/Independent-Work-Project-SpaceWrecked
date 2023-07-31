@@ -11,10 +11,21 @@ public class Blueprint : MonoBehaviour
     //has a list of materials stored
     //has a build value.
 
+    public Vector2 location;
 
-    GameObject selfPrefab;                          //spawn item when completed
-    ItemStat selfRef;                               //reference to the script object
-    List<KeyValuePair<ItemStat, int>> materialContain;              //stores items and name of materials needed
+    public GameObject selfPrefab;                          //spawn item when completed
+    public ItemStat selfItemStat;                               //reference to the script object
+    List<KeyValuePair<ItemStat, int>> materialContain;              //stores items and name of materials needed, ie inventory
+
+    public enum gridLayer
+    {
+        Floor,              //tilemap object
+        Roof,               //null for now
+        Object,             //structure, object
+        numLayers, 
+    }
+    public gridLayer layer;
+    int material;           //1-4               //additional tag for material if stated
 
     //destroyed when finished, telling the grid to change certain values
     
@@ -24,14 +35,29 @@ public class Blueprint : MonoBehaviour
     {
         //selfRef = selfPrefab.GetComponent<ItemStat>();      //reference to script
         //get prefab values
-        
+
+        //layer
+
         //material
-        
+
     }
 
-    // Update is called once per frame
-    void Update()
+    public void FinishBuild()
     {
-        
+        switch (layer)
+        {
+            default:
+            case gridLayer.Floor:
+                //assign to mastergrid
+                break;
+            case gridLayer.Roof:
+                //assign to mastergrid
+                break;
+            case gridLayer.Object:
+                GameObject selfObject = Instantiate(selfPrefab);
+                //assign parent here, to object manager
+                break;
+        }
+        Destroy(gameObject);
     }
 }

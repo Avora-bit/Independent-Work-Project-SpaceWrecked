@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -35,7 +36,6 @@ public class MasterGrid : MonoBehaviour
     [SerializeField] TileMapSpriteUV[] tileMapSpriteUVArray;
     private Dictionary<TileMapObject.TileType, UVCoords> dictUVCoords;
 
-
     private Mesh roomMesh;
     public BaseGrid<PathNode> pathfindingGrid = new BaseGrid<PathNode>();
     //stores data for access levels, walkability and weighted paths
@@ -49,6 +49,7 @@ public class MasterGrid : MonoBehaviour
     private MeshRenderer overlayMeshRenderer;
     private int renderLayer = 0;            //0 for dont render, 1++ according to following arrays
 
+    public BaseGrid<int> arrayLight = new BaseGrid<int>();
     public BaseGrid<double> arrayHeat = new BaseGrid<double>();
     public BaseGrid<double> arrayRadiation = new BaseGrid<double>();
     public BaseGrid<double> arrayOxygen = new BaseGrid<double>();
@@ -65,8 +66,8 @@ public class MasterGrid : MonoBehaviour
         npcManager = transform.parent.Find("NPC Manager").gameObject.GetComponent<NPCManager>();
         taskManager = transform.parent.Find("Task Manager").gameObject.GetComponent<TaskManager>();
 
-    //tile mesh
-    tilemapGrid.generateGrid(mapData, (tilemapGrid, x, y) => new TileMapObject(tilemapGrid, x, y));
+        //tile mesh
+        tilemapGrid.generateGrid(mapData, (tilemapGrid, x, y) => new TileMapObject(tilemapGrid, x, y));
         tileMesh = new Mesh();
         GetComponent<MeshFilter>().mesh = tileMesh;
 
@@ -82,14 +83,16 @@ public class MasterGrid : MonoBehaviour
             };
         }
 
+        //light data here, follows tile data of tileobject, but as an overlay
+        //ignores generating over vaccumm
+
         //overlay renderer
         overlayMeshRenderer = transform.Find("OverlayRenderer").GetComponent<MeshRenderer>();
         overlayMesh = new Mesh();
         transform.Find("OverlayRenderer").GetComponent<MeshFilter>().mesh = overlayMesh;
 
         //room
-        pathfindingGrid.generateGrid(mapData, (pathfindingGrid, x, y) => new PathNode(pathfindingGrid, x, y));
-        
+        pathfindingGrid.generateGrid(mapData, (pathfindingGrid, x, y) => new PathNode(pathfindingGrid, x, y));          //minimap
         roomMesh = new Mesh();
         transform.Find("RoomRenderer").GetComponent<MeshFilter>().mesh = roomMesh;
 
@@ -97,7 +100,6 @@ public class MasterGrid : MonoBehaviour
         arrayHeat.generateGrid(mapData, (arrayHeat, x, y) => -300);
         arrayRadiation.generateGrid(mapData, (arrayHeat, x, y) => 0);
         arrayOxygen.generateGrid(mapData, (arrayOxygen, x, y) => 0);
-
     }
 
     public List<Vector3> findVectorPath(Vector3 startPos, Vector3 endPos, bool canFly)
@@ -242,10 +244,11 @@ public class MasterGrid : MonoBehaviour
 
     void Update()
     {
-        //diffuse heat
+        //diffuse values
         if (Time.timeScale > 0 && arrayHeat.getRebuild()) arrayHeat.setRebuild(diffuse(arrayHeat));
         if (Time.timeScale > 0 && arrayRadiation.getRebuild()) arrayRadiation.setRebuild(diffuse(arrayRadiation));
         if (Time.timeScale > 0 && arrayOxygen.getRebuild()) arrayOxygen.setRebuild(diffuse(arrayOxygen));
+        //light doesnt diffuse via dt so ignore here
 
         //tilemapGrid
         //always render the base tile mesh, only rebuild when updated
@@ -268,6 +271,9 @@ public class MasterGrid : MonoBehaviour
                 //heat visual
                 if (arrayHeat.getRebuild()) updateMeshVisual(arrayHeat);
                 break;
+            case 2:
+                //access            //null for now
+                break;
             case 3:
                 //radiation visual
                 if (arrayRadiation.getRebuild()) updateMeshVisual(arrayRadiation);
@@ -277,7 +283,8 @@ public class MasterGrid : MonoBehaviour
                 if (arrayOxygen.getRebuild()) updateMeshVisual(arrayOxygen);
                 break;
             default:
-                //case 0, nothing
+                //case 0 light
+                if (arrayLight.getRebuild()) updateMeshVisual(arrayLight);
                 break;
         }
     }
@@ -499,90 +506,42 @@ public class MasterGrid : MonoBehaviour
     {
         if (renderLayer == 1)
         {
-            overlayMeshRenderer.enabled = false;
+            overlayMeshRenderer.material = Resources.Load<Material>("Overlay/LightGradient");
             renderLayer = 0;
-            //for (int x = 0; x < mapData.getWidth(); ++x)
-            //{
-            //    for (int y = 0; y < mapData.getHeight(); ++y)
-            //    {
-            //        debugTextArray[x, y].gameObject.SetActive(false);
-            //    }
-            //}
         }
         else
         {
-            overlayMeshRenderer.enabled = true;
             overlayMeshRenderer.material = Resources.Load<Material>("Overlay/HeatGradient");
             updateMeshVisual(arrayHeat);
             renderLayer = 1;
-            //for (int x = 0; x < mapData.getWidth(); ++x)
-            //{
-            //    for (int y = 0; y < mapData.getHeight(); ++y)
-            //    {
-            //        debugTextArray[x, y].gameObject.SetActive(true);
-            //        debugTextArray[x, y].text = ((int)arrayHeat.getGridObject(x, y)).ToString();
-            //    }
-            //}
         }
     }
     public void toggleRadiation()
     {
         if (renderLayer == 3)
         {
-            overlayMeshRenderer.enabled = false;
+            overlayMeshRenderer.material = Resources.Load<Material>("Overlay/LightGradient");
             renderLayer = 0;
-            //for (int x = 0; x < mapData.getWidth(); ++x)
-            //{
-            //    for (int y = 0; y < mapData.getHeight(); ++y)
-            //    {
-            //        debugTextArray[x, y].gameObject.SetActive(false);
-            //    }
-            //}
         }
         else
         {
-            overlayMeshRenderer.enabled = true;
             overlayMeshRenderer.material = Resources.Load<Material>("Overlay/RadiationGradient");
             updateMeshVisual(arrayRadiation);                                  //requires update
             renderLayer = 3;
-            //for (int x = 0; x < mapData.getWidth(); ++x)
-            //{
-            //    for (int y = 0; y < mapData.getHeight(); ++y)
-            //    {
-            //        debugTextArray[x, y].gameObject.SetActive(false);
-            //        debugTextArray[x, y].text = pathfindingGrid.getGridObject(x, y).ToString();
-            //    }
-            //}
         }
     }
     public void toggleOxygen()
     {
         if (renderLayer == 4)
         {
-            overlayMeshRenderer.enabled = false;
+            overlayMeshRenderer.material = Resources.Load<Material>("Overlay/LightGradient");
             renderLayer = 0;
-            //for (int x = 0; x < mapData.getWidth(); ++x)
-            //{
-            //    for (int y = 0; y < mapData.getHeight(); ++y)
-            //    {
-            //        debugTextArray[x, y].gameObject.SetActive(false);
-            //    }
-            //}
         }
         else
         {
-            overlayMeshRenderer.enabled = true;
             overlayMeshRenderer.material = Resources.Load<Material>("Overlay/OxygenGradient");
             updateMeshVisual(arrayOxygen);                                  //requires update
             renderLayer = 4;
-            //for (int x = 0; x < mapData.getWidth(); ++x)
-            //{
-            //    for (int y = 0; y < mapData.getHeight(); ++y)
-            //    {
-            //        debugTextArray[x, y].gameObject.SetActive(false);
-            //        debugTextArray[x, y].text = pathfindingGrid.getGridObject(x, y).ToString();
-            //    }
-            //}
         }
     }
 
@@ -617,6 +576,7 @@ public class MasterGrid : MonoBehaviour
         //do stuff here
     }
 
+    //light does not diffuse but rather assigns values directly on to neighbours
     private bool diffuse(BaseGrid<double> arrayType)
     {
         bool updated = false;

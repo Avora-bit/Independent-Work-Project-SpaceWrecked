@@ -133,10 +133,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pointAlloc_BaseStat: 15
+  maxStat: 10
   pointAlloc_BaseSkill: 40
+  maxSkill: 20
   taskPriority: 0000000000000000000000000000000000000000000000000000000000000000
+  currFSMState: 0
+  dtLastIdle: 0
   needThreshold: 0.3
-  canFly: 0
+  canFly: 1
 --- !u!212 &651349610939728728
 SpriteRenderer:
   m_ObjectHideFlags: 0

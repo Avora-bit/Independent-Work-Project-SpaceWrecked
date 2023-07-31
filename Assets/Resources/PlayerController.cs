@@ -127,7 +127,7 @@ public class PlayerController : BaseSingleton<PlayerController>
                             double temp = Mathf.Clamp((float)masterGrid.arrayHeat.getGridObject(mousePos) + 100, mapData.getMinTemp(), mapData.getMaxTemp());
                             masterGrid.arrayHeat.setGridObject(mousePos, temp);
                             break;
-                        case 2:             //access
+                        case 2:             //access            //null for now
                             masterGrid.pathfindingGrid.getGridObject(mousePos).isSolid = true;
                             masterGrid.pathfindingGrid.setRebuild(true);
                             break;
@@ -172,7 +172,7 @@ public class PlayerController : BaseSingleton<PlayerController>
 
                                                     //check the tile and the associated layer
                                                     bool state = true;
-                                                    if (buildMode !=BuildMode.DestroyWall)
+                                                    if (buildMode != BuildMode.DestroyWall)
                                                     {
                                                         if (!masterGrid.pathfindingGrid.getGridObject(x, y).isSpace) state = false;
                                                         if (buildMode == BuildMode.DestroyFloor) state = !state;     //inverse state for destroy
@@ -240,7 +240,7 @@ public class PlayerController : BaseSingleton<PlayerController>
                                     case BuildMode.BuildInteractable:
                                     case BuildMode.DestroyInteractable:
                                         //disable drag
-                                        //render the gameobject on the cursor, press R to rotate clockwise
+                                        //render the gameobject on the cursor, press QE to rotate clockwise
                                         //display buildhints based on where the object is being placed
                                         //display the red state if either the tile is space or solid
                                         
@@ -260,7 +260,7 @@ public class PlayerController : BaseSingleton<PlayerController>
                     {
                         case 1:             //heat
                             break;
-                        case 2:             //access
+                        case 2:             //access        null for now
                             break;
                         case 3:             //radiation
                             break;
@@ -279,9 +279,7 @@ public class PlayerController : BaseSingleton<PlayerController>
                                         {
                                             if (!child.gameObject.GetComponent<BuildHint>().state) continue;
                                             masterGrid.tilemapGrid.getGridObject(child.position).setTileType(tileType);
-                                            masterGrid.tilemapGrid.setRebuild(true);
                                             masterGrid.pathfindingGrid.getGridObject(child.position).isSpace = false;
-                                            masterGrid.pathfindingGrid.setRebuild(true);
                                         }
                                         break;
                                     case BuildMode.DestroyFloor:
@@ -289,9 +287,7 @@ public class PlayerController : BaseSingleton<PlayerController>
                                         {
                                             if (!child.gameObject.GetComponent<BuildHint>().state) continue;
                                             masterGrid.tilemapGrid.getGridObject(child.position).setTileType(TileMapObject.TileType.None);
-                                            masterGrid.tilemapGrid.setRebuild(true);
                                             masterGrid.pathfindingGrid.getGridObject(child.position).isSpace = true;
-                                            masterGrid.pathfindingGrid.setRebuild(true);
                                         }
                                         break;
                                     case BuildMode.BuildWall:
@@ -300,7 +296,6 @@ public class PlayerController : BaseSingleton<PlayerController>
                                             if (!child.gameObject.GetComponent<BuildHint>().state) continue;
                                             //spawn wall here
                                             masterGrid.pathfindingGrid.getGridObject(child.position).isSolid = true;
-                                            masterGrid.pathfindingGrid.setRebuild(true);
                                         }
                                         break;
                                     case BuildMode.DestroyWall:
@@ -309,7 +304,6 @@ public class PlayerController : BaseSingleton<PlayerController>
                                             if (!child.gameObject.GetComponent<BuildHint>().state) continue;
                                             //destroy wall here
                                             masterGrid.pathfindingGrid.getGridObject(child.position).isSolid = false;
-                                            masterGrid.pathfindingGrid.setRebuild(true);
                                         }
                                         break;
                                     case BuildMode.BuildInteractable:
@@ -335,6 +329,10 @@ public class PlayerController : BaseSingleton<PlayerController>
                                     //    go.transform.SetParent(masterGrid.transform.GetChild(4), true);         //create blueprints in new children
                                     //}
                                 }
+
+                                masterGrid.arrayLight.setRebuild(true);
+                                masterGrid.tilemapGrid.setRebuild(true);
+                                masterGrid.pathfindingGrid.setRebuild(true);
                                 resetDraggable();       //clear the parent class
                             }
                             break;
@@ -359,7 +357,7 @@ public class PlayerController : BaseSingleton<PlayerController>
                             double temp = Mathf.Clamp((float)masterGrid.arrayHeat.getGridObject(mousePos) - 100, mapData.getMinTemp(), mapData.getMaxTemp());
                             masterGrid.arrayHeat.setGridObject(mousePos, temp);
                             break;
-                        case 2:             //access
+                        case 2:             //access                //null for now
                             masterGrid.pathfindingGrid.getGridObject(mousePos).isSolid = false;
                             masterGrid.pathfindingGrid.setRebuild(true);
                             break;
@@ -389,7 +387,7 @@ public class PlayerController : BaseSingleton<PlayerController>
                     {
                         case 1:             //heat
                             break;
-                        case 2:             //access
+                        case 2:             //access            //null for now
                             break;
                         case 3:             //radiation
                             break;
@@ -422,7 +420,7 @@ public class PlayerController : BaseSingleton<PlayerController>
                     {
                         case 1:             //heat
                             break;
-                        case 2:             //access
+                        case 2:             //access                //null for now
                             break;
                         case 3:             //radiation
                             break;
