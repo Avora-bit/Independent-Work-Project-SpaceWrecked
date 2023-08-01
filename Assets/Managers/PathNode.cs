@@ -7,7 +7,7 @@ public class PathNode {
 
     public bool isSolid = false;            //if solid then cannot move
     public bool isSpace = true;             //if space then need to have "fly" tag, else can walk
-    public int movementCost = 1;         //multiplier on the NPC's speed, use 1/cost for the offset, never be negative
+    public int movementCost = 1;            //multiplier on the NPC's speed, use 1/cost for the offset, never be negative
     public int accessLayer = 1;
 
     public PathNode(BaseGrid<PathNode> grid, int x, int y) {

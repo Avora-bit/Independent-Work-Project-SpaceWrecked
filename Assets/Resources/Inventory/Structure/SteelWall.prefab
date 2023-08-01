@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 8767196839285602991}
   - component: {fileID: 9111682825329227298}
   m_Layer: 0
-  m_Name: Wall
+  m_Name: SteelWall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -74,15 +74,15 @@ SpriteRenderer:
   m_SortingLayerID: -29983521
   m_SortingLayer: 1
   m_SortingOrder: 0
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: e633629a13dbe7949aea8b528e2899ed, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 4, y: 1}
+  m_Size: {x: 1, y: 1}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 0
+  m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!114 &9111682825329227298
@@ -99,7 +99,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   dir: 0
   position: {x: 0, y: 0}
-  objectType: Wall
+  objectType: SteelWall
   width: 1
   height: 1
   movementCost: 0

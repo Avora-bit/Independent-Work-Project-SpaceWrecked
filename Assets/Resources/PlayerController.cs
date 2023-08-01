@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Unity.VisualScripting;
+using TMPro;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.InputSystem.HID;
 
 public class PlayerController : BaseSingleton<PlayerController>
 {
@@ -15,6 +15,7 @@ public class PlayerController : BaseSingleton<PlayerController>
     private MapData mapData;
     private float minPosX, minPosY, maxPosX, maxPosY;
     private MasterGrid masterGrid;
+    private string tileStringData;
 
     [SerializeField] private GameObject cursor;
     private List<GameObject> dragHintList;
@@ -31,7 +32,7 @@ public class PlayerController : BaseSingleton<PlayerController>
     public GameObject itemPrefab;
     public GameObject buildPrefab;
 
-    private bool b_IsLMB = false, b_IsRMB = false, b_IsMMB = false;
+    private int placeRotation = 0;
 
     private Vector3 offsets;            //map offsets
 
@@ -82,12 +83,27 @@ public class PlayerController : BaseSingleton<PlayerController>
             screenPos.z -= Camera.main.transform.position.z;
             mousePos = Camera.main.ScreenToWorldPoint(screenPos);
 
+            if (buildMode == BuildMode.BuildInteractable && buildPrefab != null)
+            {
+                //render the gameobject on the cursor, press QE to rotate clockwise
+                if (Input.GetKeyDown(KeyCode.Q)) placeRotation += 90;
+                if (Input.GetKeyDown(KeyCode.E)) placeRotation -= 90;
+                if (buildPrefab != null) buildPrefab.transform.eulerAngles = new Vector3(0, 0, placeRotation);
+            }
+            else placeRotation = 0;
+
+            if (placeRotation < 0) placeRotation += 360;
+            if (placeRotation > 360) placeRotation -= 360;
+
             if (!EventSystem.current.IsPointerOverGameObject())
             {
                 cursor.SetActive(true);
                 Vector3 clampedPos = new Vector3(Mathf.Clamp(mousePos.x, offsets.x, offsets.x + mapData.getWidth() * mapData.getCellSize()),
                                                  Mathf.Clamp(mousePos.y, offsets.y, offsets.y + mapData.getHeight() * mapData.getCellSize()), 0);
                 cursor.transform.position = new Vector3(masterGrid.pathfindingGrid.getGridObject(clampedPos).x, masterGrid.pathfindingGrid.getGridObject(clampedPos).y, 0) + offsets;
+                tileStringData = masterGrid.pathfindingGrid.getGridObject(cursor.transform.position).ToString() + "\n" +
+                                  masterGrid.pathfindingGrid.getGridObject(cursor.transform.position).isSpace + "\n" +
+                                  masterGrid.pathfindingGrid.getGridObject(cursor.transform.position).isSolid + "\n";
             }
             else
             {
@@ -97,6 +113,8 @@ public class PlayerController : BaseSingleton<PlayerController>
             if (mouseRollBack != cursor.transform.position)
             {
                 mousePosChanged = true;
+                //tile 
+                cursor.transform.GetChild(1).GetChild(0).GetComponent<TextMeshPro>().text = tileStringData;
             }
             else
             {
@@ -112,12 +130,11 @@ public class PlayerController : BaseSingleton<PlayerController>
                 if (Input.mouseScrollDelta.y < 0) transform.position = new Vector3(transform.position.x, transform.position.y,
                                                   Mathf.Lerp(transform.position.z, transform.position.z - zoomSpeed, Time.unscaledDeltaTime * zoomSpeed));
 
-                if (!b_IsLMB && Input.GetMouseButton(0))           //LMB down
+                if (Input.GetMouseButtonDown(0))           //LMB down
                 {
-                    b_IsLMB = true;
                     dragLMBstart = mousePos;
                 }
-                else if (b_IsLMB && Input.GetMouseButton(0))       //LMB pressed, exclude first and last frame
+                else if (Input.GetMouseButton(0))       //LMB pressed, exclude first and last frame
                 {
                     dragLMBend = mousePos;
 
@@ -157,6 +174,7 @@ public class PlayerController : BaseSingleton<PlayerController>
                                     case BuildMode.BuildFloor:
                                     case BuildMode.DestroyFloor:
                                     case BuildMode.DestroyWall:
+                                    case BuildMode.DestroyInteractable:
                                         //2D drag
                                         //blanket over the square
                                         for (int x = start_x; x <= end_x; x++)
@@ -172,10 +190,14 @@ public class PlayerController : BaseSingleton<PlayerController>
 
                                                     //check the tile and the associated layer
                                                     bool state = true;
-                                                    if (buildMode != BuildMode.DestroyWall)
+                                                    if (buildMode != BuildMode.DestroyWall && buildMode != BuildMode.DestroyInteractable)
                                                     {
                                                         if (!masterGrid.pathfindingGrid.getGridObject(x, y).isSpace) state = false;
-                                                        if (buildMode == BuildMode.DestroyFloor) state = !state;     //inverse state for destroy
+                                                        if (buildMode == BuildMode.DestroyFloor)
+                                                        {
+                                                            state = !state;     //inverse state for destroy
+                                                            if (masterGrid.pathfindingGrid.getGridObject(x, y).isSolid) state = !state;
+                                                        }
                                                     }
                                                     else
                                                     {
@@ -236,13 +258,11 @@ public class PlayerController : BaseSingleton<PlayerController>
                                             }
                                         }
                                         break;
-                                    case BuildMode.None:
+                                    case BuildMode.None: //disable drag
                                     case BuildMode.BuildInteractable:
-                                    case BuildMode.DestroyInteractable:
-                                        //disable drag
                                         //render the gameobject on the cursor, press QE to rotate clockwise
                                         //display buildhints based on where the object is being placed
-                                        //display the red state if either the tile is space or solid
+                                        //display the red state if either the tile is space or occupied
                                         
                                         break;
                                     default:
@@ -252,10 +272,9 @@ public class PlayerController : BaseSingleton<PlayerController>
                             break;
                     }
                 }
-                else if (b_IsLMB && !Input.GetMouseButton(0))      //LMB up
+                else if (Input.GetMouseButtonUp(0))      //LMB up
                 {
-                    b_IsLMB = false;
-
+                    List<Vector2> occupancy;
                     switch (masterGrid.getRenderLayer())
                     {
                         case 1:             //heat
@@ -295,39 +314,78 @@ public class PlayerController : BaseSingleton<PlayerController>
                                         {
                                             if (!child.gameObject.GetComponent<BuildHint>().state) continue;
                                             //spawn wall here
-                                            masterGrid.pathfindingGrid.getGridObject(child.position).isSolid = true;
+                                            GameObject wallInstance = Resources.Load<GameObject>("Inventory/Structure/" + tileType.ToString() + "Wall");
+                                            wallInstance = Instantiate(wallInstance, child.position, Quaternion.Euler(Vector3.zero));
+                                            wallInstance.GetComponent<InstalledObject>().install();
+                                            wallInstance.transform.parent = masterGrid.objectManager.transform;
+                                            occupancy = wallInstance.GetComponent<InstalledObject>().GetGridPositionList();
+                                            foreach (Vector2 gridPos in occupancy)
+                                            {
+                                                masterGrid.pathfindingGrid.getGridObject(gridPos).isSolid = true;
+                                            }
                                         }
                                         break;
                                     case BuildMode.DestroyWall:
+                                    case BuildMode.DestroyInteractable:
                                         foreach (Transform child in masterGrid.transform.GetChild(3))
                                         {
                                             if (!child.gameObject.GetComponent<BuildHint>().state) continue;
-                                            //destroy wall here
-                                            masterGrid.pathfindingGrid.getGridObject(child.position).isSolid = false;
+                                            //check which tile and what is on the tile
+                                            foreach (Transform installedObject in masterGrid.objectManager.transform)
+                                            {
+                                                occupancy = installedObject.gameObject.GetComponent<InstalledObject>().GetGridPositionList();
+                                                foreach (Vector2 gridPos in occupancy)
+                                                {
+                                                    if (new Vector3(gridPos.x, gridPos.y, 0) == child.position)
+                                                    {
+                                                        //destroy object and tiles to empty
+                                                        foreach (Vector2 destroyablePos in occupancy)
+                                                        {
+                                                            masterGrid.pathfindingGrid.getGridObject(destroyablePos).isSolid = false;
+                                                        }
+                                                        Destroy(installedObject.gameObject);
+                                                        break;
+                                                    }
+                                                }
+                                            }
                                         }
                                         break;
                                     case BuildMode.BuildInteractable:
                                         //place on the cursor with respect to rotation
-
-                                        //set the tiles underneath to solid
+                                        GameObject newObject = Instantiate(buildPrefab, cursor.transform.position, Quaternion.Euler(new Vector3(0, 0, placeRotation)));
+                                        newObject.transform.parent = masterGrid.objectManager.transform;
+                                        newObject.GetComponent<InstalledObject>().install();
+                                        occupancy = newObject.GetComponent<InstalledObject>().GetGridPositionList();
+                                        bool openSlot = true;
+                                        foreach (Vector2 gridPos in occupancy)
+                                        {
+                                            if (masterGrid.pathfindingGrid.getGridObject(gridPos).isSolid || masterGrid.pathfindingGrid.getGridObject(gridPos).isSpace)
+                                            {
+                                                openSlot = false;
+                                                Destroy(newObject);
+                                                cursor.transform.GetChild(1).GetChild(0).GetComponent<TextMeshPro>().text = cannotbuildMessage;
+                                                break;
+                                            }
+                                        }
+                                        if (openSlot)
+                                        {
+                                            foreach (Vector2 gridPos in occupancy)
+                                            {
+                                                masterGrid.pathfindingGrid.getGridObject(gridPos).isSolid = true;
+                                            }
+                                        }
                                         break;
-                                    case BuildMode.DestroyInteractable:
-                                        //check which tile and what is on the tile
-                                        //destroy object
-                                        //set the tiles underneath to tiles
-                                        break;
-
-                                    //spawn prefabs 
-                                    //if (!masterGrid.pathfindingGrid.getGridObject(child.position).isSolid)
-                                    //{   //not solid, then place solid item
-                                    //    GameObject go = Instantiate(BlueprintPrefab, child);
-                                    //    go.transform.SetParent(masterGrid.transform.GetChild(4), true);         //create blueprints in new children
-                                    //}
-                                    //else
-                                    //{   //is solid, or is space, then can place floor
-                                    //    GameObject go = Instantiate(BlueprintPrefab, child);
-                                    //    go.transform.SetParent(masterGrid.transform.GetChild(4), true);         //create blueprints in new children
-                                    //}
+                                        //spawn prefabs 
+                                        //if (!masterGrid.pathfindingGrid.getGridObject(child.position).isSolid)
+                                        //{   //not solid, then place solid item
+                                        //    GameObject go = Instantiate(BlueprintPrefab, child);
+                                        //    go.transform.SetParent(masterGrid.transform.GetChild(4), true);         //create blueprints in new children
+                                        //}
+                                        //else
+                                        //{   //is solid, or is space, then can place floor
+                                        //    GameObject go = Instantiate(BlueprintPrefab, child);
+                                        //    go.transform.SetParent(masterGrid.transform.GetChild(4), true);         //create blueprints in new children
+                                        //}
                                 }
 
                                 masterGrid.arrayLight.setRebuild(true);
@@ -344,12 +402,11 @@ public class PlayerController : BaseSingleton<PlayerController>
                     //null
                 }
 
-                if (!b_IsRMB && Input.GetMouseButton(1))           //RMB down
+                if (Input.GetMouseButtonDown(1))           //RMB down
                 {
-                    b_IsRMB = true;
 
                 }
-                else if (b_IsRMB && Input.GetMouseButton(1))       //RMB pressed, exclude first and last frame
+                else if (Input.GetMouseButton(1))       //RMB pressed, exclude first and last frame
                 {
                     switch (masterGrid.getRenderLayer())
                     {
@@ -371,8 +428,7 @@ public class PlayerController : BaseSingleton<PlayerController>
                             break;
                         default:            //tilemap
                             //spawn new item
-                            ItemStat newItem = itemPrefab.GetComponent<ItemStat>();
-                            if (masterGrid.pathfindingGrid.getGridObject(mousePos) != null)
+                            if (itemPrefab != null && cursor.activeInHierarchy == true)
                             {
                                 GameObject tempItem = Instantiate(itemPrefab, cursor.transform);
                                 tempItem.transform.SetParent(masterGrid.inventoryManager.transform, true);
@@ -380,9 +436,8 @@ public class PlayerController : BaseSingleton<PlayerController>
                             break;
                     }
                 }
-                else if (b_IsRMB && !Input.GetMouseButton(1))      //RMB up
+                else if (Input.GetMouseButtonUp(1))      //RMB up
                 {
-                    b_IsRMB = false;
                     switch (masterGrid.getRenderLayer())
                     {
                         case 1:             //heat
@@ -400,7 +455,6 @@ public class PlayerController : BaseSingleton<PlayerController>
                             masterGrid.npcManager.spawnEntity((int)mousePos.x, (int)mousePos.y, masterGrid.npcManager.prefabMech);
 
                             //reset the control scheme
-                            
 
                             break;
                     }
@@ -410,11 +464,11 @@ public class PlayerController : BaseSingleton<PlayerController>
                     //null
                 }
 
-                if (!b_IsMMB && Input.GetMouseButton(2))           //MMB down
+                if (Input.GetMouseButtonDown(2))           //MMB down
                 {
-                    b_IsMMB = true;
+
                 }
-                else if (b_IsMMB && Input.GetMouseButton(2))       //MMB pressed, exclude first and last frame
+                else if (Input.GetMouseButton(2))       //MMB pressed, exclude first and last frame
                 {
                     switch (masterGrid.getRenderLayer())
                     {
@@ -430,9 +484,9 @@ public class PlayerController : BaseSingleton<PlayerController>
                             break;
                     }
                 }
-                else if (b_IsMMB && !Input.GetMouseButton(2))      //MMB up
+                else if (Input.GetMouseButtonUp(2))      //MMB up
                 {
-                    b_IsMMB = false;
+
                 }
                 else
                 {
@@ -498,13 +552,13 @@ public class PlayerController : BaseSingleton<PlayerController>
         }
     }
 
-
     //building
     public void ResetControl()
     {
         buildMode = BuildMode.None;
         tileType = TileMapObject.TileType.None;
-        buildPrefab = null;
+        Destroy(itemPrefab);
+        Destroy(buildPrefab);
     }
     public void setBuildMode(string buildMode)
     {
@@ -513,13 +567,15 @@ public class PlayerController : BaseSingleton<PlayerController>
     }
     public void setMaterial(string tileType)
     {
+        Destroy(buildPrefab);
         TileMapObject.TileType parsed = (TileMapObject.TileType)Enum.Parse(typeof(TileMapObject.TileType), tileType);
         this.tileType = parsed;
+        itemPrefab = Instantiate(Resources.Load<GameObject>("Inventory/Materials/" + tileType), cursor.transform);
     }
 
     public void setInstalledObject(string objectName)
     {
-        if (objectName == "Null") buildPrefab = null;
-        else buildPrefab = Resources.Load<GameObject>("Inventory/Interactables/" + objectName);
+        Destroy(buildPrefab);
+        buildPrefab = Instantiate(Resources.Load<GameObject>("Inventory/Interactables/" + objectName), cursor.transform);
     }
 }

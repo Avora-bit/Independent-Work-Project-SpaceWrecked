@@ -194,8 +194,8 @@ MonoBehaviour:
   dragLMBend: {x: 0, y: 0, z: 0}
   mouseRollBack: {x: 0, y: 0, z: 0}
   mousePosChanged: 0
-  itemPrefab: {fileID: 2056124641140046948, guid: f2d480916ee775c45a04a2583eea7ee4, type: 3}
-  buildPrefab: {fileID: 2066337613947230411, guid: c194bb97dc0a4b3499ba9f3c4e1b05b2, type: 3}
+  itemPrefab: {fileID: 0}
+  buildPrefab: {fileID: 0}
   BlueprintPlacedMessage: Blueprint Placed
   cannotbuildMessage: Cannot Build Here!
   InteractionSpotBlockedMessage: Interaction Spot Blocked!

@@ -33,8 +33,8 @@ public class BaseEntity : MonoBehaviour
     private float rateMove, rateWork, rateLearn, rateResearch;
     private float maxCapacity, currCapacity;
 
-    private GameObject npcPtr = null;            //pointer to object
-    private ItemStat itemPtr = null;
+    [SerializeField] private BaseEntity npcPtr = null;
+    [SerializeField] private ItemStat itemPtr = null;
 
     private List<ItemStat> inventory = new List<ItemStat>();
     public Task taskRef;           //reference to task in NPCController, attempt to finish task before taking another
@@ -236,8 +236,10 @@ public class BaseEntity : MonoBehaviour
         if (itemPtr == null)
         {
             if (pathVectorList != null) stopMoving();
-            //Debug.Log("waiting for item");
-            //itemPtr = mapInstance.findNearest(transform.position, "Aluminium", canFly);
+            if (itemPtr == null) itemPtr = mapInstance.findNearest(transform.position, "Aluminium", canFly);
+            if (itemPtr == null) itemPtr = mapInstance.findNearest(transform.position, "Steel", canFly);
+            if (itemPtr == null) itemPtr = mapInstance.findNearest(transform.position, "Plasteel", canFly);
+            if (itemPtr == null) itemPtr = mapInstance.findNearest(transform.position, "Tungsten", canFly);
         }
         else
         {
@@ -270,7 +272,7 @@ public class BaseEntity : MonoBehaviour
         if (currFSMState == FSMstates.IDLE)
         {
             dtLastIdle += Time.deltaTime;
-            Debug.Log("Waiting for task: " + dtLastIdle);
+            //Debug.Log("Waiting for task: " + dtLastIdle);
         }
         else
         {
@@ -288,12 +290,12 @@ public class BaseEntity : MonoBehaviour
         itemPtr = target;
     }
 
-    public GameObject getNPCPtr()
+    public BaseEntity getNPCPtr()
     {
         return npcPtr;
     }
 
-    public void setNPCPtr(GameObject target)
+    public void setNPCPtr(BaseEntity target)
     {
         npcPtr = target;
     }

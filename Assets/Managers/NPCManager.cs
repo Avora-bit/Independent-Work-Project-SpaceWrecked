@@ -24,12 +24,7 @@ public class NPCManager : MonoBehaviour
         objectManager = transform.parent.Find("Object Manager").gameObject.GetComponent<ObjectManager>();
         taskManager = transform.parent.Find("Task Manager").gameObject.GetComponent<TaskManager>();
 
-        //for (int i = 0; i < 100; i++)
-        //{
-        //    spawnEntity(prefabDrone);
-        //}
         spawnEntity(0, 0, prefabDrone);
-        //testingNPC = transform.GetChild(0).GetComponent<BaseEntity>();
     }
 
     private void Update()

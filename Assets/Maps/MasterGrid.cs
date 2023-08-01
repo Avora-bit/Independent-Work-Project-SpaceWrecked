@@ -636,7 +636,6 @@ public class MasterGrid : MonoBehaviour
                 }
             }
         }
-
         return nearestItem;              //aka null, or closest item
         //if either process cannot find the item, then return null
     }
