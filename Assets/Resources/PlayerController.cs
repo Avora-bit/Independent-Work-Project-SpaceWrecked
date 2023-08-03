@@ -450,9 +450,9 @@ public class PlayerController : BaseSingleton<PlayerController>
                             break;
                         default:            //tilemap
                             //spawn new NPC
-                            masterGrid.npcManager.spawnEntity((int)mousePos.x, (int)mousePos.y, masterGrid.npcManager.prefabDrone);
-                            masterGrid.npcManager.spawnEntity((int)mousePos.x, (int)mousePos.y, masterGrid.npcManager.prefabHuman);
-                            masterGrid.npcManager.spawnEntity((int)mousePos.x, (int)mousePos.y, masterGrid.npcManager.prefabMech);
+                            //masterGrid.npcManager.spawnEntity((int)mousePos.x, (int)mousePos.y, masterGrid.npcManager.prefabDrone);
+                            //masterGrid.npcManager.spawnEntity((int)mousePos.x, (int)mousePos.y, masterGrid.npcManager.prefabHuman);
+                            //masterGrid.npcManager.spawnEntity((int)mousePos.x, (int)mousePos.y, masterGrid.npcManager.prefabMech);
 
                             //reset the control scheme
 
